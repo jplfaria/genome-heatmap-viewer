@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genome Heatmap Viewer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background: #fff;
+            padding: 0;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+        }
+        .sidebar-header {
+            background: #2563eb;
+            color: white;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-section {
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .sidebar-section-title {
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sidebar-section-title:hover { background: #f0f0f0; }
+        .sidebar-section-title .toggle-icon { font-size: 10px; color: #999; }
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #fff;
+        }
+        .track-list {
+            padding: 8px 0;
+        }
+        .track-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .track-item:hover { background: #f5f7fa; }
+        .track-item.active {
+            background: #eff6ff;
+            border-left-color: #2563eb;
+        }
+        .track-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 16px;
+            height: 16px;
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+        .track-item label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 13px;
+            color: #444;
+        }
+        .track-item .sort-btn {
+            background: #2563eb;
+            border: none;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.15s;
+            font-weight: 500;
+        }
+        .track-item:hover .sort-btn { opacity: 1; }
+        .track-item .sort-btn:hover { background: #1d4ed8; }
+        .action-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            color: #2563eb;
+            font-size: 13px;
+        }
+        .action-item:hover { background: #eff6ff; }
+        .action-item .icon { margin-right: 8px; }
+        .heatmap-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+        }
+        #heatmap {
+            display: block;
+        }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            gap: 16px;
+        }
+        .toolbar button {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+        .toolbar button:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .toolbar .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toolbar .zoom-controls span {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+        .toolbar input[type="range"] {
+            width: 150px;
+            accent-color: #2563eb;
+        }
+        .toolbar .info {
+            margin-left: auto;
+            font-size: 12px;
+            color: #666;
+            background: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+        .tooltip {
+            position: absolute;
+            background: #1f2937;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 320px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            line-height: 1.5;
+        }
+        .tooltip .gene-id { color: #60a5fa; font-weight: bold; }
+        .tooltip .func { color: #9ca3af; font-style: italic; margin-top: 4px; display: block; }
+        .genome-selector {
+            height: 44px;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .genome-selector span {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+        .genome-selector input[type="range"] {
+            flex: 1;
+            accent-color: #2563eb;
+        }
+        #position-info {
+            font-size: 11px;
+            color: #666;
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 3px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 10px 16px;
+            background: #fafafa;
+            border-top: 1px solid #e0e0e0;
+            font-size: 11px;
+            color: #666;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .legend-label {
+            font-weight: 500;
+            margin-right: 8px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>Genome Heatmap Viewer</span>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Data Tracks</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="track-list" id="track-list"></div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Actions</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="action-item" onclick="resetSort()">
+                    <span class="icon">↺</span> Reset to genome order
+                </div>
+                <div class="action-item" onclick="selectAll()">
+                    <span class="icon">☑</span> Select all tracks
+                </div>
+                <div class="action-item" onclick="deselectAll()">
+                    <span class="icon">☐</span> Deselect all tracks
+                </div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="toolbar">
+                <div class="zoom-controls">
+                    <span>Zoom:</span>
+                    <input type="range" id="zoom-slider" min="1" max="100" value="1">
+                    <button onclick="resetZoom()">Reset</button>
+                </div>
+                <div class="info" id="info">Loading...</div>
+            </div>
+            <div class="heatmap-container">
+                <canvas id="heatmap"></canvas>
+                <div class="tooltip" id="tooltip"></div>
+            </div>
+            <div class="legend" id="legend"></div>
+            <div class="genome-selector">
+                <span>Position:</span>
+                <input type="range" id="position-slider" min="0" max="100" value="0">
+                <span id="position-info">0 - 4617</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Track definitions - based on Christopher's requirements
+    // Data array indices: [0:id, 1:fid, 2:length, 3:start, 4:strand, 5:conservation_frac, 6:pan_category,
+    //   7:function, 8:n_ko, 9:n_cog, 10:n_pfam, 11:n_go, 12:localization,
+    //   13:rast_cons, 14:ko_cons, 15:go_cons, 16:ec_cons, 17:avg_cons, 18:bakta_cons, 19:ec_avg_cons, 20:specificity]
+    const TRACKS = [
+        // === BASIC GENE INFO ===
+        { id: 'order', name: 'Gene Order', field: 0, type: 'sequential', enabled: true },
+        { id: 'length', name: 'Gene Length', field: 2, type: 'sequential', enabled: true },
+        { id: 'strand', name: 'Gene Direction', field: 4, type: 'binary', enabled: true },
+
+        // === PANGENOME ===
+        { id: 'conservation', name: 'Pangenome Conservation Fraction', field: 5, type: 'sequential', enabled: true },
+        { id: 'pan_category', name: 'Core/Accessory', field: 6, type: 'categorical', enabled: true, categories: ['Unknown', 'Accessory', 'Core'] },
+
+        // === CONSISTENCY SCORES (Function Consensus) ===
+        { id: 'avg_cons', name: 'Function Consensus (avg)', field: 17, type: 'consistency', enabled: true },
+        { id: 'rast_cons', name: 'RAST Consistency', field: 13, type: 'consistency', enabled: false },
+        { id: 'ko_cons', name: 'KO Consistency', field: 14, type: 'consistency', enabled: false },
+        { id: 'go_cons', name: 'GO Consistency', field: 15, type: 'consistency', enabled: false },
+        { id: 'ec_cons', name: 'EC Consistency', field: 16, type: 'consistency', enabled: false },
+        { id: 'bakta_cons', name: 'Bakta Consistency', field: 18, type: 'consistency', enabled: false },
+
+        // === ANNOTATION SPECIFICITY ===
+        { id: 'specificity', name: 'Annotation Specificity', field: 20, type: 'consistency', enabled: false },
+
+        // === ANNOTATION COUNTS ===
+        { id: 'n_ko', name: '# KEGG Terms', field: 8, type: 'sequential', enabled: false },
+        { id: 'n_cog', name: '# COG Terms', field: 9, type: 'sequential', enabled: false },
+        { id: 'n_pfam', name: '# Pfam Terms', field: 10, type: 'sequential', enabled: false },
+        { id: 'n_go', name: '# GO Terms', field: 11, type: 'sequential', enabled: false },
+
+        // === LOCALIZATION ===
+        { id: 'localization', name: 'Subcellular Localization', field: 12, type: 'categorical', enabled: false, categories: ['Cytoplasmic', 'CytoMembrane', 'Periplasmic', 'OuterMembrane', 'Extracellular', 'Unknown'] },
+
+        // === PLACEHOLDERS (data not yet available) ===
+        { id: 'neighborhood', name: 'Neighborhood Conservation*', field: -1, type: 'placeholder', enabled: false },
+        { id: 'flux_minimal', name: 'Flux (minimal media)*', field: -1, type: 'placeholder', enabled: false },
+        { id: 'rxn_class_min', name: 'Rxn Class (minimal)*', field: -1, type: 'placeholder', enabled: false },
+        { id: 'rxn_class_rich', name: 'Rxn Class (rich)*', field: -1, type: 'placeholder', enabled: false },
+        { id: 'n_phenotypes', name: '# Phenotypes*', field: -1, type: 'placeholder', enabled: false },
+        { id: 'n_fitness', name: '# Fitness Scores*', field: -1, type: 'placeholder', enabled: false },
+    ];
+
+    // Color schemes - optimized for light background
+    const COLORS = {
+        sequential: (v) => {
+            // Blue to Red gradient (like typical heatmaps)
+            const r = Math.floor(59 + 196 * v);  // 59 -> 255
+            const g = Math.floor(130 - 80 * v);  // 130 -> 50
+            const b = Math.floor(246 - 196 * v); // 246 -> 50
+            return `rgb(${r}, ${g}, ${b})`;
+        },
+        binary: (v) => v ? '#22c55e' : '#ef4444',  // Green for +, Red for -
+        categorical: (v, cats) => {
+            const colors = ['#9ca3af', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ef4444'];
+            return colors[v % colors.length];
+        },
+        consistency: (v) => {
+            // Red (low consistency) to Green (high consistency), Gray for missing
+            if (v < 0) return '#e5e7eb';  // Gray for missing data
+            // Red -> Yellow -> Green
+            if (v < 0.5) {
+                const r = 239;
+                const g = Math.floor(68 + 180 * (v * 2));
+                return `rgb(${r}, ${g}, 68)`;
+            } else {
+                const r = Math.floor(239 - 205 * ((v - 0.5) * 2));
+                const g = Math.floor(248 - 52 * ((v - 0.5) * 2));
+                return `rgb(${r}, ${g}, 68)`;
+            }
+        },
+        placeholder: () => '#f3f4f6'  // Light gray for placeholder tracks
+    };
+
+    let genes = [];
+    let sortedIndices = [];
+    let currentSort = null;
+    let zoomLevel = 1;
+    let scrollPosition = 0;
+    let canvas, ctx;
+
+    // Load data
+    async function loadData() {
+        try {
+            const response = await fetch('genes_data.json');
+            genes = await response.json();
+            sortedIndices = genes.map((_, i) => i);
+            init();
+        } catch (e) {
+            console.error('Failed to load data:', e);
+            document.getElementById('info').textContent = 'Error loading data. Make sure genes_data.json exists.';
+        }
+    }
+
+    function init() {
+        canvas = document.getElementById('heatmap');
+        ctx = canvas.getContext('2d');
+
+        renderTrackList();
+        setupEventListeners();
+        resize();
+        render();
+
+        document.getElementById('info').textContent = `${genes.length} genes loaded`;
+    }
+
+    function renderTrackList() {
+        const list = document.getElementById('track-list');
+        list.innerHTML = TRACKS.map((track, i) => `
+            <div class="track-item ${track.enabled ? 'active' : ''}" data-track="${i}">
+                <input type="checkbox" id="track-${i}" ${track.enabled ? 'checked' : ''} onchange="toggleTrack(${i})">
+                <label for="track-${i}">${track.name}</label>
+                <button class="sort-btn" onclick="sortByTrack(${i}); event.stopPropagation();">Sort ↓</button>
+            </div>
+        `).join('');
+    }
+
+    function toggleTrack(idx) {
+        TRACKS[idx].enabled = !TRACKS[idx].enabled;
+        renderTrackList();
+        render();
+    }
+
+    function selectAll() {
+        TRACKS.forEach(t => t.enabled = true);
+        renderTrackList();
+        render();
+    }
+
+    function deselectAll() {
+        TRACKS.forEach(t => t.enabled = false);
+        renderTrackList();
+        render();
+    }
+
+    function sortByTrack(idx) {
+        const track = TRACKS[idx];
+        const field = track.field;
+
+        sortedIndices = [...sortedIndices].sort((a, b) => {
+            const va = genes[a][field];
+            const vb = genes[b][field];
+            return vb - va; // Descending
+        });
+
+        currentSort = track.name;
+        document.getElementById('info').textContent = `Sorted by: ${track.name}`;
+        render();
+    }
+
+    function resetSort() {
+        sortedIndices = genes.map((_, i) => i);
+        currentSort = null;
+        document.getElementById('info').textContent = `${genes.length} genes (genome order)`;
+        render();
+    }
+
+    function resetZoom() {
+        zoomLevel = 1;
+        scrollPosition = 0;
+        document.getElementById('zoom-slider').value = 1;
+        document.getElementById('position-slider').value = 0;
+        render();
+    }
+
+    function setupEventListeners() {
+        window.addEventListener('resize', () => { resize(); render(); });
+
+        document.getElementById('zoom-slider').addEventListener('input', (e) => {
+            zoomLevel = parseFloat(e.target.value);
+            render();
+        });
+
+        document.getElementById('position-slider').addEventListener('input', (e) => {
+            scrollPosition = parseFloat(e.target.value) / 100;
+            render();
+        });
+
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseleave', () => {
+            document.getElementById('tooltip').style.display = 'none';
+        });
+    }
+
+    function handleMouseMove(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const enabledTracks = TRACKS.filter(t => t.enabled);
+        const labelWidth = 140;
+        const trackHeight = Math.min(40, (canvas.height - 10) / enabledTracks.length);
+        const heatmapWidth = canvas.width - labelWidth - 10;
+
+        const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
+        const startIdx = Math.floor(scrollPosition * Math.max(0, genes.length - visibleGenes));
+        const geneWidth = heatmapWidth / visibleGenes;
+
+        // Only show tooltip if mouse is over heatmap area (past labels)
+        if (x < labelWidth) {
+            document.getElementById('tooltip').style.display = 'none';
+            return;
+        }
+
+        const geneIdx = Math.floor((x - labelWidth) / geneWidth) + startIdx;
+        const trackIdx = Math.floor((y - 5) / trackHeight);
+
+        if (geneIdx >= 0 && geneIdx < genes.length && trackIdx >= 0 && trackIdx < enabledTracks.length) {
+            const gene = genes[sortedIndices[geneIdx]];
+            const track = enabledTracks[trackIdx];
+
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `
+                <div class="gene-id">Gene: ${gene[1]}</div>
+                <div>Position: ${gene[3]}</div>
+                <div>Length: ${gene[2]} bp</div>
+                <div>Strand: ${gene[4] ? '+' : '-'}</div>
+                <div>Conservation: ${(gene[5] * 100).toFixed(1)}%</div>
+                <div class="func">${gene[7] || 'No function annotation'}</div>
+            `;
+            tooltip.style.display = 'block';
+            tooltip.style.left = Math.min(e.clientX + 10, window.innerWidth - 320) + 'px';
+            tooltip.style.top = (e.clientY + 10) + 'px';
+        } else {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+    }
+
+    function resize() {
+        const container = document.querySelector('.heatmap-container');
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+    }
+
+    function render() {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const enabledTracks = TRACKS.filter(t => t.enabled);
+        if (enabledTracks.length === 0) {
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Select tracks from the sidebar to display', canvas.width / 2, canvas.height / 2);
+            ctx.textAlign = 'left';
+            return;
+        }
+
+        const labelWidth = 140;  // Space for track labels on left
+        const trackHeight = Math.min(40, (canvas.height - 10) / enabledTracks.length);
+        const heatmapWidth = canvas.width - labelWidth - 10;
+
+        // Calculate visible range
+        const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
+        const startIdx = Math.floor(scrollPosition * Math.max(0, genes.length - visibleGenes));
+        const endIdx = Math.min(genes.length, startIdx + visibleGenes);
+        const geneWidth = heatmapWidth / visibleGenes;
+
+        // Update position info
+        document.getElementById('position-info').textContent = `${startIdx} - ${endIdx} of ${genes.length}`;
+
+        // Compute min/max for each track
+        const trackStats = {};
+        enabledTracks.forEach(track => {
+            if (track.type === 'sequential') {
+                let min = Infinity, max = -Infinity;
+                genes.forEach(g => {
+                    const v = g[track.field];
+                    if (v < min) min = v;
+                    if (v > max) max = v;
+                });
+                trackStats[track.id] = { min, max, range: max - min || 1 };
+            }
+        });
+
+        // Draw tracks
+        enabledTracks.forEach((track, ti) => {
+            const y = 5 + ti * trackHeight;
+
+            // Track label background
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, y, labelWidth - 5, trackHeight - 2);
+
+            // Track label
+            ctx.fillStyle = '#374151';
+            ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.fillText(track.name, 8, y + trackHeight / 2 + 4);
+
+            // Draw heatmap cells
+            for (let i = startIdx; i < endIdx; i++) {
+                const gene = genes[sortedIndices[i]];
+                const x = labelWidth + (i - startIdx) * geneWidth;
+                const value = gene[track.field];
+
+                let color;
+                if (track.type === 'sequential') {
+                    const stats = trackStats[track.id];
+                    const normalized = (value - stats.min) / stats.range;
+                    color = COLORS.sequential(normalized);
+                } else if (track.type === 'binary') {
+                    color = COLORS.binary(value);
+                } else if (track.type === 'categorical') {
+                    color = COLORS.categorical(value, track.categories);
+                } else if (track.type === 'consistency') {
+                    // Consistency scores: 0-1, or -1 for missing
+                    color = COLORS.consistency(value);
+                } else if (track.type === 'placeholder') {
+                    color = COLORS.placeholder();
+                }
+
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, Math.max(1, geneWidth - 0.5), trackHeight - 2);
+            }
+        });
+
+        // Draw legend
+        renderLegend(enabledTracks);
+    }
+
+    function renderLegend(enabledTracks) {
+        const legend = document.getElementById('legend');
+        let html = '';
+
+        // Sequential gradient
+        html += `<div class="legend-item">
+            <span class="legend-label">Value:</span>
+            <span>Low</span>
+            <div class="legend-color" style="background: linear-gradient(to right, rgb(59,130,246), rgb(255,50,50)); width: 60px;"></div>
+            <span>High</span>
+        </div>`;
+
+        // Consistency gradient
+        html += `<div class="legend-item">
+            <span class="legend-label">Consistency:</span>
+            <span>0</span>
+            <div class="legend-color" style="background: linear-gradient(to right, #ef4444, #fbbf24, #22c55e); width: 60px;"></div>
+            <span>1</span>
+            <div class="legend-color" style="background: #e5e7eb;"></div><span>N/A</span>
+        </div>`;
+
+        // Binary (Strand direction)
+        html += `<div class="legend-item">
+            <span class="legend-label">Strand:</span>
+            <div class="legend-color" style="background: #22c55e;"></div><span>+</span>
+            <div class="legend-color" style="background: #ef4444;"></div><span>−</span>
+        </div>`;
+
+        // Core/Accessory
+        html += `<div class="legend-item">
+            <span class="legend-label">Category:</span>
+            <div class="legend-color" style="background: #9ca3af;"></div><span>?</span>
+            <div class="legend-color" style="background: #f59e0b;"></div><span>Acc</span>
+            <div class="legend-color" style="background: #22c55e;"></div><span>Core</span>
+        </div>`;
+
+        legend.innerHTML = html;
+    }
+
+    // Start
+    loadData();
+    </script>
+</body>
+</html>
