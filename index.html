@@ -12,11 +12,31 @@
             color: #333;
             height: 100vh;
             overflow: hidden;
-        }
-        .container {
             display: flex;
-            height: 100vh;
+            flex-direction: column;
         }
+        .tab-bar {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 16px;
+            flex-shrink: 0;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tab-btn:hover { color: #2563eb; background: #f0f7ff; }
+        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .tab-content { display: none; flex: 1; overflow: hidden; }
+        .tab-content.active { display: flex; }
         .sidebar {
             width: 280px;
             background: #fff;
@@ -174,6 +194,7 @@
             font-size: 12px;
             overflow-x: auto;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         .kpi-stat { display: inline-flex; align-items: baseline; gap: 4px; padding: 0 10px; }
         .kpi-stat:not(:last-child) { border-right: 1px solid #475569; }
@@ -301,25 +322,46 @@
             margin-right: 4px;
         }
         /* Genome selector */
-        .genome-selector {
-            height: 40px;
+        .genome-minimap {
             background: #fff;
             border-top: 1px solid #e0e0e0;
-            padding: 6px 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            position: relative;
+            height: 56px;
+            user-select: none;
         }
-        .genome-selector span { font-size: 11px; color: #666; font-weight: 500; }
-        .genome-selector input[type="range"] { flex: 1; accent-color: #2563eb; }
+        .genome-minimap canvas {
+            display: block;
+            width: 100%;
+            height: 36px;
+            cursor: pointer;
+        }
+        .minimap-viewport {
+            position: absolute;
+            top: 0;
+            height: 36px;
+            background: rgba(37, 99, 235, 0.15);
+            border: 2px solid rgba(37, 99, 235, 0.6);
+            border-radius: 2px;
+            cursor: grab;
+            min-width: 6px;
+            box-sizing: border-box;
+            transition: background 0.1s;
+        }
+        .minimap-viewport:hover { background: rgba(37, 99, 235, 0.25); }
+        .minimap-viewport.dragging { cursor: grabbing; background: rgba(37, 99, 235, 0.3); }
+        .minimap-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 8px;
+            font-size: 10px;
+            color: #888;
+        }
         #position-info {
             font-size: 10px;
             color: #666;
             background: #f3f4f6;
-            padding: 2px 6px;
+            padding: 1px 6px;
             border-radius: 3px;
-            min-width: 110px;
-            text-align: center;
         }
         /* Legend */
         .legend {
@@ -332,7 +374,7 @@
             color: #666;
             flex-wrap: wrap;
         }
-        .legend-item { display: flex; align-items: center; gap: 3px; }
+        .legend-item { display: flex; align-items: center; gap: 3px; cursor: help; position: relative; }
         .legend-color {
             width: 14px;
             height: 10px;
@@ -376,10 +418,43 @@
         .track-desc-tooltip .tt-label { color: #93c5fd; font-weight: 600; display: block; margin-top: 5px; }
         .track-desc-tooltip .tt-colors { display: flex; gap: 6px; margin-top: 3px; align-items: center; font-size: 10px; }
         .track-desc-tooltip .tt-swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+        /* Tree View */
+        .tree-container { flex: 1; overflow: auto; background: #fff; position: relative; }
+        .tree-container svg { display: block; }
+        .tree-toolbar { padding: 8px 12px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 12px; font-size: 11px; color: #666; }
+        .tree-leaf { cursor: pointer; }
+        .tree-leaf:hover text { fill: #2563eb !important; }
+        .tree-leaf.user-genome text { fill: #dc2626; font-weight: 700; }
+        .tree-tooltip {
+            position: fixed; background: #1f2937; color: white;
+            padding: 10px 14px; border-radius: 6px; font-size: 11px;
+            pointer-events: none; z-index: 1000; max-width: 350px;
+            display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); line-height: 1.5;
+        }
+        .stat-toggle { display: flex; align-items: center; gap: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+        .stat-toggle:hover { background: #f5f7fa; }
+        .stat-toggle input { accent-color: #2563eb; }
+        .stat-bar-label { font-size: 9px; fill: #666; }
+        /* Cluster View */
+        .cluster-container { flex: 1; position: relative; overflow: hidden; background: #fff; }
+        #cluster-canvas { display: block; }
+        .cluster-toolbar { padding: 8px 12px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 12px; font-size: 11px; }
+        .cluster-legend { display: flex; gap: 16px; padding: 6px 12px; background: #fafafa; border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; flex-wrap: wrap; flex-shrink: 0; }
+        .cluster-legend .legend-item { display: flex; align-items: center; gap: 3px; }
+        .cluster-select { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 11px; background: #fff; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Shared KPI Bar -->
+    <div class="kpi-bar" id="kpi-bar"></div>
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tracks" onclick="switchTab('tracks')">Tracks</button>
+        <button class="tab-btn" data-tab="tree" onclick="switchTab('tree')">Tree</button>
+        <button class="tab-btn" data-tab="cluster" onclick="switchTab('cluster')">Cluster</button>
+    </div>
+    <!-- Tab: Tracks -->
+    <div class="tab-content active" id="tab-tracks">
         <div class="sidebar">
             <div class="sidebar-header">Genome Heatmap Viewer</div>
             <!-- Search -->
@@ -429,8 +504,6 @@
             </div>
         </div>
         <div class="main">
-            <!-- KPI Summary Bar -->
-            <div class="kpi-bar" id="kpi-bar"></div>
             <!-- Toolbar -->
             <div class="toolbar">
                 <div class="zoom-controls">
@@ -456,18 +529,130 @@
             </div>
             <!-- Legend -->
             <div class="legend" id="legend"></div>
-            <!-- Position -->
-            <div class="genome-selector">
-                <span>Position:</span>
-                <input type="range" id="position-slider" min="0" max="100" value="0">
-                <span id="position-info">0 - 4617</span>
+            <!-- Genome Minimap Navigation -->
+            <div class="genome-minimap" id="genome-minimap">
+                <canvas id="minimap-canvas"></canvas>
+                <div class="minimap-viewport" id="minimap-viewport"></div>
+                <div class="minimap-info">
+                    <span id="minimap-label">Genome overview</span>
+                    <span id="position-info">0 - 4617 of 4617</span>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Tab: Tree -->
+    <div class="tab-content" id="tab-tree">
+        <div class="sidebar">
+            <div class="sidebar-header">Genome Tree</div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Stats Bars</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div id="tree-stat-toggles"></div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Tree Info</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px; font-size: 11px; color: #666; line-height: 1.6;" id="tree-info">
+                    Loading tree data...
+                </div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="tree-toolbar" id="tree-toolbar">
+                <span>UPGMA dendrogram based on Jaccard distance of pangenome cluster presence/absence</span>
+            </div>
+            <div class="tree-container" id="tree-container"></div>
+        </div>
+        <div class="tree-tooltip" id="tree-tooltip"></div>
+    </div>
+
+    <!-- Tab: Cluster -->
+    <div class="tab-content" id="tab-cluster">
+        <div class="sidebar">
+            <div class="sidebar-header">Gene Clusters</div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Embedding</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 6px 12px;">
+                    <select class="cluster-select" id="cluster-embedding" onchange="changeClusterEmbedding()">
+                        <option value="features">Gene Features</option>
+                        <option value="presence">Presence/Absence</option>
+                    </select>
+                    <div style="font-size: 10px; color: #888; margin-top: 4px;" id="cluster-embed-desc">
+                        UMAP of conservation, consistency scores, annotation counts, protein length
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Color By</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 6px 12px;">
+                    <select class="cluster-select" id="cluster-color-by" onchange="changeClusterColor()">
+                        <option value="pan_category">Core/Accessory</option>
+                        <option value="conservation">Conservation</option>
+                        <option value="avg_cons">Avg Consistency</option>
+                        <option value="is_hypo">Hypothetical</option>
+                        <option value="localization">Localization</option>
+                        <option value="n_ko"># KEGG Terms</option>
+                        <option value="n_modules">Module Hits</option>
+                        <option value="cluster_size">Cluster Size</option>
+                        <option value="specificity">Specificity</option>
+                        <option value="agreement">RAST/Bakta Agreement</option>
+                    </select>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Search</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="cluster-search" placeholder="Search genes...">
+                    <div class="search-info" id="cluster-search-info"></div>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Info</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px; font-size: 11px; color: #666; line-height: 1.6;" id="cluster-info">
+                    Loading cluster data...
+                </div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="cluster-toolbar" id="cluster-toolbar">
+                <span id="cluster-toolbar-info">UMAP projection of 4,617 genes</span>
+            </div>
+            <div class="cluster-container">
+                <canvas id="cluster-canvas"></canvas>
+                <div class="tooltip" id="cluster-tooltip"></div>
+            </div>
+            <div class="cluster-legend" id="cluster-legend"></div>
+        </div>
+    </div>
+
     <script>
-    // === DATA FIELD INDICES ===
-    const F = {
+    // === VIEWER CONFIG ===
+    // Loaded from config.json (or uses inline defaults).
+    // To adapt this viewer for a different genome:
+    //   1. Generate new genes_data.json, tree_data.json, cluster_data.json
+    //   2. Update config.json with new field mappings, tracks, organism info
+    //   3. Reload the viewer
+    let CONFIG = null;
+
+    // === DATA FIELD INDICES (defaults, overridden by config.json) ===
+    let F = {
         ID:0, FID:1, LENGTH:2, START:3, STRAND:4, CONS_FRAC:5, PAN_CAT:6,
         FUNC:7, N_KO:8, N_COG:9, N_PFAM:10, N_GO:11, LOC:12,
         RAST_CONS:13, KO_CONS:14, GO_CONS:15, EC_CONS:16,
@@ -476,9 +661,9 @@
         CLUSTER_SIZE:25, N_MODULES:26, EC_MAP_CONS:27, PROT_LEN:28
     };
 
-    const LOC_NAMES = ['Cytoplasmic', 'CytoMembrane', 'Periplasmic', 'OuterMembrane', 'Extracellular', 'Unknown'];
-    const PAN_NAMES = ['Unknown', 'Accessory', 'Core'];
-    const AGREE_NAMES = ['Both Hypothetical', 'One Hypothetical', 'Disagree', 'Agree'];
+    let LOC_NAMES = ['Cytoplasmic', 'CytoMembrane', 'Periplasmic', 'OuterMembrane', 'Extracellular', 'Unknown'];
+    let PAN_NAMES = ['Unknown', 'Accessory', 'Core'];
+    let AGREE_NAMES = ['Both Hypothetical', 'One Hypothetical', 'Disagree', 'Agree'];
 
     // === TRACK DEFINITIONS ===
     const TRACKS = [
@@ -727,10 +912,84 @@
     let searchMatches = new Set();
     let selectedGene = null;
 
-    // === DATA LOADING ===
+    // Tab state
+    let activeTab = 'tracks';
+    let treeData = null;
+    let clusterData = null;
+    let treeLoaded = false;
+    let clusterLoaded = false;
+    let clusterEmbedding = 'features';
+    let clusterColorBy = 'pan_category';
+    let clusterCanvas, clusterCtx;
+    let clusterSearchMatches = new Set();
+
+    // Tree stat bar config
+    const TREE_STATS = [
+        { id: 'n_genes', name: 'Gene Count', short: 'Genes', color: '#3b82f6', enabled: true },
+        { id: 'n_clusters', name: 'Cluster Count', short: 'Clusters', color: '#8b5cf6', enabled: true },
+        { id: 'core_pct', name: 'Core %', short: 'Core %', color: '#22c55e', enabled: true },
+    ];
+
+    // === TAB SWITCHING ===
+    function switchTab(tabId) {
+        activeTab = tabId;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('active', t.id === 'tab-' + tabId));
+        // Setup section collapse for new tabs
+        document.querySelectorAll('.tab-content.active .sidebar-section-title').forEach(title => {
+            if (!title._collapseWired) {
+                title.addEventListener('click', () => title.parentElement.classList.toggle('collapsed'));
+                title._collapseWired = true;
+            }
+        });
+        if (tabId === 'tree' && !treeLoaded) loadTreeData();
+        if (tabId === 'cluster' && !clusterLoaded) loadClusterData();
+        if (tabId === 'tracks') { resize(); render(); renderMinimap(); }
+    }
+
+    // === CONFIG + DATA LOADING ===
+    async function loadConfig() {
+        try {
+            const resp = await fetch('config.json');
+            CONFIG = await resp.json();
+            console.log(`Loaded config for: ${CONFIG.organism || 'unknown organism'}`);
+
+            // Apply config overrides
+            if (CONFIG.fields) F = CONFIG.fields;
+            if (CONFIG.categories) {
+                if (CONFIG.categories.localization) LOC_NAMES = CONFIG.categories.localization;
+                if (CONFIG.categories.pangenome) PAN_NAMES = CONFIG.categories.pangenome;
+                if (CONFIG.categories.agreement) AGREE_NAMES = CONFIG.categories.agreement;
+            }
+
+            // Apply track enabled states from config
+            if (CONFIG.tracks) {
+                const configTrackMap = {};
+                CONFIG.tracks.forEach(ct => { configTrackMap[ct.id] = ct; });
+                TRACKS.forEach(t => {
+                    const ct = configTrackMap[t.id];
+                    if (ct) {
+                        if (ct.enabled !== undefined) t.enabled = ct.enabled;
+                        if (ct.name) t.name = ct.name;
+                        if (ct.field !== undefined) t.field = typeof ct.field === 'string' ? F[ct.field] : ct.field;
+                    }
+                });
+            }
+
+            // Update page title
+            if (CONFIG.title) document.title = CONFIG.title;
+
+        } catch (e) {
+            console.log('No config.json found, using defaults');
+            CONFIG = {};
+        }
+    }
+
     async function loadData() {
         try {
-            const response = await fetch('genes_data.json');
+            await loadConfig();
+            const genesFile = (CONFIG.data_files && CONFIG.data_files.genes) || 'genes_data.json';
+            const response = await fetch(genesFile);
             genes = await response.json();
             sortedIndices = genes.map((_, i) => i);
             init();
@@ -751,6 +1010,7 @@
         setupSectionCollapse();
         resize();
         render();
+        renderMinimap();
         document.getElementById('info').textContent = `${genes.length} genes loaded`;
     }
 
@@ -867,6 +1127,7 @@
                 renderTrackList();
                 renderAnalysisViews();
                 render();
+                renderMinimap();
             });
         });
 
@@ -955,6 +1216,7 @@
         document.getElementById('info').textContent = `Sorted by: ${preset.name}`;
         renderSortPresets();
         render();
+        renderMinimap();
     }
 
     // === SEARCH ===
@@ -964,6 +1226,7 @@
         if (!query || query.length < 2) {
             info.style.display = 'none';
             render();
+            renderMinimap();
             return;
         }
         const q = query.toLowerCase();
@@ -984,10 +1247,10 @@
             if (posInSorted >= 0) {
                 const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
                 scrollPosition = Math.min(1, posInSorted / Math.max(1, genes.length - visibleGenes));
-                document.getElementById('position-slider').value = scrollPosition * 100;
             }
         }
         render();
+        renderMinimap();
     }
 
     // === GENE DETAIL PANEL ===
@@ -1068,9 +1331,10 @@
         TRACKS[idx].enabled = !TRACKS[idx].enabled;
         renderTrackList();
         render();
+        renderMinimap();
     }
-    function selectAll() { TRACKS.forEach(t => t.enabled = true); renderTrackList(); render(); }
-    function deselectAll() { TRACKS.forEach(t => t.enabled = false); renderTrackList(); render(); }
+    function selectAll() { TRACKS.forEach(t => t.enabled = true); renderTrackList(); render(); renderMinimap(); }
+    function deselectAll() { TRACKS.forEach(t => t.enabled = false); renderTrackList(); render(); renderMinimap(); }
 
     function sortByTrack(idx) {
         const track = TRACKS[idx];
@@ -1083,6 +1347,7 @@
         document.getElementById('info').textContent = `Sorted by: ${track.name}`;
         renderSortPresets();
         render();
+        renderMinimap();
     }
 
     function resetSort() {
@@ -1091,21 +1356,21 @@
         document.getElementById('info').textContent = `${genes.length} genes (genome order)`;
         renderSortPresets();
         render();
+        renderMinimap();
     }
 
     function resetZoom() {
         zoomLevel = 1;
         scrollPosition = 0;
         document.getElementById('zoom-slider').value = 1;
-        document.getElementById('position-slider').value = 0;
         render();
+        renderMinimap();
     }
 
     // === EVENT LISTENERS ===
     function setupEventListeners() {
-        window.addEventListener('resize', () => { resize(); render(); });
-        document.getElementById('zoom-slider').addEventListener('input', (e) => { zoomLevel = parseFloat(e.target.value); render(); });
-        document.getElementById('position-slider').addEventListener('input', (e) => { scrollPosition = parseFloat(e.target.value) / 100; render(); });
+        window.addEventListener('resize', () => { resize(); render(); renderMinimap(); });
+        document.getElementById('zoom-slider').addEventListener('input', (e) => { zoomLevel = parseFloat(e.target.value); render(); renderMinimap(); });
         canvas.addEventListener('mousemove', handleMouseMove);
         canvas.addEventListener('mouseleave', () => { document.getElementById('tooltip').style.display = 'none'; });
         canvas.addEventListener('click', handleClick);
@@ -1115,6 +1380,185 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => handleSearch(e.target.value.trim()), 200);
         });
+
+        setupMinimap();
+    }
+
+    // === MINIMAP NAVIGATION ===
+    let minimapCanvas, minimapCtx;
+    let minimapDragging = false;
+    let minimapDragOffset = 0;
+
+    function setupMinimap() {
+        minimapCanvas = document.getElementById('minimap-canvas');
+        minimapCtx = minimapCanvas.getContext('2d');
+        const viewport = document.getElementById('minimap-viewport');
+        const container = document.getElementById('genome-minimap');
+
+        // Drag viewport
+        viewport.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            minimapDragging = true;
+            viewport.classList.add('dragging');
+            const rect = viewport.getBoundingClientRect();
+            minimapDragOffset = e.clientX - rect.left;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!minimapDragging) return;
+            const containerRect = container.getBoundingClientRect();
+            const canvasW = minimapCanvas.width / (window.devicePixelRatio || 1);
+            const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
+            const viewportW = Math.max(6, (visibleGenes / genes.length) * canvasW);
+            const maxLeft = canvasW - viewportW;
+            const newLeft = Math.max(0, Math.min(maxLeft, e.clientX - containerRect.left - minimapDragOffset));
+            scrollPosition = maxLeft > 0 ? newLeft / maxLeft : 0;
+            render();
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (minimapDragging) {
+                minimapDragging = false;
+                viewport.classList.remove('dragging');
+            }
+        });
+
+        // Click on minimap background to jump
+        minimapCanvas.addEventListener('click', (e) => {
+            const rect = minimapCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const canvasW = rect.width;
+            const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
+            const viewportFrac = visibleGenes / genes.length;
+            // Center the viewport on the click position
+            const targetCenter = clickX / canvasW;
+            scrollPosition = Math.max(0, Math.min(1, (targetCenter - viewportFrac / 2) / (1 - viewportFrac)));
+            if (genes.length <= visibleGenes) scrollPosition = 0;
+            render();
+        });
+
+        // Mouse wheel on minimap to scroll
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
+            const step = 0.05;
+            scrollPosition = Math.max(0, Math.min(1, scrollPosition + (e.deltaY > 0 ? step : -step)));
+            render();
+        }, { passive: false });
+    }
+
+    function renderMinimap() {
+        if (!minimapCanvas || !genes.length) return;
+        const container = document.getElementById('genome-minimap');
+        const dpr = window.devicePixelRatio || 1;
+        const displayW = container.clientWidth;
+        const displayH = 36;
+        minimapCanvas.width = displayW * dpr;
+        minimapCanvas.height = displayH * dpr;
+        minimapCanvas.style.width = displayW + 'px';
+        minimapCanvas.style.height = displayH + 'px';
+        minimapCtx.scale(dpr, dpr);
+
+        // Clear
+        minimapCtx.fillStyle = '#f8fafc';
+        minimapCtx.fillRect(0, 0, displayW, displayH);
+
+        // Pick the best track to visualize: prefer conservation, then core/accessory, then first enabled
+        const enabledTracks = TRACKS.filter(t => t.enabled);
+        let primaryTrack = enabledTracks.find(t => t.id === 'conservation') ||
+                           enabledTracks.find(t => t.id === 'pan_category') ||
+                           enabledTracks.find(t => t.id === 'avg_consistency') ||
+                           enabledTracks[0];
+
+        if (!primaryTrack) {
+            // No tracks enabled, draw placeholder
+            minimapCtx.fillStyle = '#e5e7eb';
+            minimapCtx.fillRect(0, 0, displayW, displayH);
+            updateMinimapViewport();
+            return;
+        }
+
+        // Compute stats for sequential tracks
+        let trackMin = 0, trackMax = 1, trackRange = 1;
+        if (primaryTrack.type === 'sequential') {
+            trackMin = Infinity; trackMax = -Infinity;
+            for (let i = 0; i < genes.length; i++) {
+                const v = genes[i][primaryTrack.field];
+                if (v < trackMin) trackMin = v;
+                if (v > trackMax) trackMax = v;
+            }
+            trackRange = trackMax - trackMin || 1;
+        }
+
+        // Draw each gene as a colored column
+        const n = genes.length;
+        const geneW = displayW / n;
+        const hasSearch = searchMatches.size > 0;
+
+        for (let i = 0; i < n; i++) {
+            const realIdx = sortedIndices[i];
+            const gene = genes[realIdx];
+            const x = i * geneW;
+            const value = gene[primaryTrack.field];
+
+            let color;
+            if (primaryTrack.type === 'sequential') {
+                color = COLORS.sequential((value - trackMin) / trackRange);
+            } else if (primaryTrack.type === 'binary') {
+                color = COLORS.binary(value);
+            } else if (primaryTrack.type === 'categorical') {
+                color = COLORS.categorical(value);
+            } else if (primaryTrack.type === 'consistency') {
+                color = COLORS.consistency(value);
+            } else {
+                color = COLORS.placeholder();
+            }
+
+            minimapCtx.fillStyle = color;
+            minimapCtx.fillRect(x, 0, Math.max(1, Math.ceil(geneW)), displayH);
+        }
+
+        // Draw search match highlights
+        if (hasSearch) {
+            // Dim the whole minimap first
+            minimapCtx.fillStyle = 'rgba(255,255,255,0.6)';
+            minimapCtx.fillRect(0, 0, displayW, displayH);
+            // Highlight matched genes
+            minimapCtx.fillStyle = '#ef4444';
+            for (const realIdx of searchMatches) {
+                const sortedPos = sortedIndices.indexOf(realIdx);
+                if (sortedPos >= 0) {
+                    const x = sortedPos * geneW;
+                    minimapCtx.fillRect(x, 0, Math.max(2, Math.ceil(geneW)), displayH);
+                }
+            }
+        }
+
+        updateMinimapViewport();
+    }
+
+    function updateMinimapViewport() {
+        const viewport = document.getElementById('minimap-viewport');
+        if (!minimapCanvas || !genes.length) return;
+        const container = document.getElementById('genome-minimap');
+        const canvasW = container.clientWidth;
+        const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
+        const viewportW = Math.max(6, (visibleGenes / genes.length) * canvasW);
+        const maxLeft = canvasW - viewportW;
+        const left = scrollPosition * maxLeft;
+
+        viewport.style.width = viewportW + 'px';
+        viewport.style.left = left + 'px';
+
+        // Update label
+        const label = document.getElementById('minimap-label');
+        const enabledTracks = TRACKS.filter(t => t.enabled);
+        const primaryTrack = enabledTracks.find(t => t.id === 'conservation') ||
+                             enabledTracks.find(t => t.id === 'pan_category') ||
+                             enabledTracks.find(t => t.id === 'avg_consistency') ||
+                             enabledTracks[0];
+        if (label) label.textContent = primaryTrack ? `Overview: ${primaryTrack.name}` : 'Genome overview';
     }
 
     // === TOOLTIP (enriched) ===
@@ -1211,6 +1655,7 @@
             ctx.textAlign = 'center';
             ctx.fillText('Select tracks from the sidebar to display', canvas.width / 2, canvas.height / 2);
             ctx.textAlign = 'left';
+            renderLegend(enabledTracks);
             return;
         }
 
@@ -1284,36 +1729,649 @@
         });
 
         renderLegend(enabledTracks);
+        updateMinimapViewport();
     }
 
     // === LEGEND ===
+    // Legend definitions per track type, with tooltip text
+    const LEGEND_DEFS = {
+        sequential: {
+            html: '<span class="legend-label">Gradient:</span><span>Low</span>' +
+                '<div class="legend-color" style="background: linear-gradient(to right, rgb(235,240,250), rgb(45,100,180)); width: 50px;"></div>' +
+                '<span>High</span>',
+            tip: 'Continuous gradient from light (low value) to dark blue (high value). Tracks like Gene Order, Conservation, Cluster Size, and annotation counts use this scale. Values are normalized within each track so the gradient always spans min to max for that track.'
+        },
+        consistency: {
+            html: '<span class="legend-label">Consistency:</span><span>0</span>' +
+                '<div class="legend-color" style="background: linear-gradient(to right, #ef4444, #fbbf24, #22c55e); width: 50px;"></div>' +
+                '<span>1</span>' +
+                '<div class="legend-color" style="background: #e5e7eb;"></div><span>N/A</span>',
+            tip: 'Red (0) = this gene\'s annotation disagrees with other genes in its pangenome cluster. Yellow (0.5) = partial agreement. Green (1.0) = full agreement. Gray = no pangenome cluster assigned or no annotation for this source.'
+        },
+        binary: {
+            html: '',
+            tip: '',
+            perTrack: {
+                'strand': {
+                    html: '<span class="legend-label">Strand:</span>' +
+                        '<div class="legend-color" style="background: #6366f1;"></div><span>Forward (+)</span>' +
+                        '<div class="legend-color" style="background: #f97316;"></div><span>Reverse (-)</span>',
+                    tip: 'Purple = gene on forward strand. Orange = gene on reverse strand. Blocks of the same color often indicate operons (co-transcribed gene groups).'
+                },
+                'is_hypo': {
+                    html: '<span class="legend-label">Hypothetical:</span>' +
+                        '<div class="legend-color" style="background: #6366f1;"></div><span>Has function</span>' +
+                        '<div class="legend-color" style="background: #f97316;"></div><span>Hypothetical</span>',
+                    tip: 'Purple = at least one annotation tool (RAST or Bakta) assigned a function. Orange = both tools classify this gene as hypothetical (function unknown).'
+                },
+                'has_name': {
+                    html: '<span class="legend-label">Gene Name:</span>' +
+                        '<div class="legend-color" style="background: #6366f1;"></div><span>Named</span>' +
+                        '<div class="legend-color" style="background: #f97316;"></div><span>Unnamed</span>',
+                    tip: 'Purple = gene has an official gene name (e.g., dnaA, lacZ). Orange = identified only by locus tag, less well-studied.'
+                }
+            }
+        },
+        categorical: {
+            html: '',
+            tip: '',
+            perTrack: {
+                'pan_category': {
+                    html: '<span class="legend-label">Pangenome:</span>' +
+                        '<div class="legend-color" style="background: #9ca3af;"></div><span>Unknown</span>' +
+                        '<div class="legend-color" style="background: #f59e0b;"></div><span>Accessory</span>' +
+                        '<div class="legend-color" style="background: #22c55e;"></div><span>Core</span>',
+                    tip: 'Gray = no pangenome cluster match. Orange = present in some reference genomes (accessory). Green = conserved across nearly all reference genomes (core).'
+                },
+                'agreement': {
+                    html: '<span class="legend-label">RAST/Bakta:</span>' +
+                        '<div class="legend-color" style="background: #9ca3af;"></div><span>Both hypo</span>' +
+                        '<div class="legend-color" style="background: #f59e0b;"></div><span>One hypo</span>' +
+                        '<div class="legend-color" style="background: #22c55e;"></div><span>Disagree</span>' +
+                        '<div class="legend-color" style="background: #3b82f6;"></div><span>Agree</span>',
+                    tip: 'Gray = both tools say hypothetical. Orange = one tool found a function the other missed. Green = both assigned functions but with different names (common, not necessarily wrong). Blue = exact same function string.'
+                },
+                'localization': {
+                    html: '<span class="legend-label">Localization:</span>' +
+                        '<div class="legend-color" style="background: #9ca3af;"></div><span>Cyto</span>' +
+                        '<div class="legend-color" style="background: #f59e0b;"></div><span>Memb</span>' +
+                        '<div class="legend-color" style="background: #22c55e;"></div><span>Peri</span>' +
+                        '<div class="legend-color" style="background: #3b82f6;"></div><span>Outer</span>' +
+                        '<div class="legend-color" style="background: #8b5cf6;"></div><span>Extra</span>',
+                    tip: 'PSORTb predicted location: Cytoplasmic, Cytoplasmic Membrane, Periplasmic, Outer Membrane, Extracellular, or Unknown.'
+                }
+            }
+        }
+    };
+
     function renderLegend(enabledTracks) {
         const legend = document.getElementById('legend');
-        legend.innerHTML = `
-            <div class="legend-item">
-                <span class="legend-label">Value:</span><span>Low</span>
-                <div class="legend-color" style="background: linear-gradient(to right, rgb(235,240,250), rgb(45,100,180)); width: 50px;"></div>
-                <span>High</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-label">Consistency:</span><span>0</span>
-                <div class="legend-color" style="background: linear-gradient(to right, #ef4444, #fbbf24, #22c55e); width: 50px;"></div>
-                <span>1</span>
-                <div class="legend-color" style="background: #e5e7eb;"></div><span>N/A</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-label">Binary:</span>
-                <div class="legend-color" style="background: #6366f1;"></div><span>Yes/+</span>
-                <div class="legend-color" style="background: #f97316;"></div><span>No/-</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-label">Category:</span>
-                <div class="legend-color" style="background: #9ca3af;"></div><span>Unknown</span>
-                <div class="legend-color" style="background: #f59e0b;"></div><span>Acc/1</span>
-                <div class="legend-color" style="background: #22c55e;"></div><span>Core/2</span>
-                <div class="legend-color" style="background: #3b82f6;"></div><span>3</span>
+        if (!enabledTracks || enabledTracks.length === 0) { legend.innerHTML = ''; return; }
+
+        const types = new Set(enabledTracks.map(t => t.type));
+        const ids = new Set(enabledTracks.map(t => t.id));
+        const items = [];
+
+        // Sequential gradient
+        if (types.has('sequential')) {
+            items.push({ html: LEGEND_DEFS.sequential.html, tip: LEGEND_DEFS.sequential.tip });
+        }
+
+        // Consistency
+        if (types.has('consistency')) {
+            items.push({ html: LEGEND_DEFS.consistency.html, tip: LEGEND_DEFS.consistency.tip });
+        }
+
+        // Binary tracks - show per-track legends
+        enabledTracks.filter(t => t.type === 'binary').forEach(t => {
+            const def = LEGEND_DEFS.binary.perTrack[t.id];
+            if (def) items.push({ html: def.html, tip: def.tip });
+        });
+
+        // Categorical tracks - show per-track legends
+        enabledTracks.filter(t => t.type === 'categorical').forEach(t => {
+            const def = LEGEND_DEFS.categorical.perTrack[t.id];
+            if (def) items.push({ html: def.html, tip: def.tip });
+        });
+
+        legend.innerHTML = items.map((item, i) =>
+            `<div class="legend-item" data-legend-tip="${i}">${item.html}</div>`
+        ).join('');
+
+        // Add tooltips
+        const descTooltip = document.getElementById('track-desc-tooltip');
+        legend.querySelectorAll('.legend-item').forEach(el => {
+            el.addEventListener('mouseenter', (e) => {
+                const idx = parseInt(el.dataset.legendTip);
+                if (!items[idx] || !items[idx].tip) return;
+                descTooltip.innerHTML = items[idx].tip;
+                descTooltip.style.display = 'block';
+                const rect = el.getBoundingClientRect();
+                descTooltip.style.left = rect.left + 'px';
+                descTooltip.style.top = (rect.top - descTooltip.offsetHeight - 8) + 'px';
+            });
+            el.addEventListener('mouseleave', () => { descTooltip.style.display = 'none'; });
+        });
+    }
+
+    // ============================================================
+    // === TREE VIEW ===
+    // ============================================================
+    async function loadTreeData() {
+        try {
+            const treeFile = (CONFIG && CONFIG.data_files && CONFIG.data_files.tree) || 'tree_data.json';
+            const resp = await fetch(treeFile);
+            treeData = await resp.json();
+            treeLoaded = true;
+            renderTreeSidebar();
+            renderTree();
+        } catch (e) {
+            console.error('Failed to load tree data:', e);
+            document.getElementById('tree-info').textContent = 'Error loading tree_data.json';
+        }
+    }
+
+    function renderTreeSidebar() {
+        const toggles = document.getElementById('tree-stat-toggles');
+        toggles.innerHTML = TREE_STATS.map((s, i) =>
+            `<label class="stat-toggle"><input type="checkbox" ${s.enabled ? 'checked' : ''} onchange="toggleTreeStat(${i})"> <span style="color:${s.color}; font-weight:600;">${s.name}</span></label>`
+        ).join('');
+
+        const info = document.getElementById('tree-info');
+        const d = treeData;
+        const userStats = d.genome_stats[d.user_genome_id] || {};
+        info.innerHTML = `
+            <div><strong>${d.stats.n_genomes}</strong> genomes (${d.stats.n_reference} reference + user)</div>
+            <div><strong>${d.stats.n_clusters}</strong> pangenome clusters used</div>
+            <div style="margin-top:6px;">Jaccard distance range: <strong>${d.stats.min_distance.toFixed(4)}</strong> - <strong>${d.stats.max_distance.toFixed(4)}</strong></div>
+            <div style="margin-top:8px; padding-top:6px; border-top:1px solid #e0e0e0; color:#dc2626; font-weight:600;">Your genome: ${d.user_genome_id}</div>
+            <div style="color:#666;">${userStats.n_genes || '?'} genes, ${userStats.n_clusters || '?'} clusters, ${userStats.core_pct ? (userStats.core_pct*100).toFixed(1)+'% core' : '?'}</div>
+            <div style="margin-top:8px; padding-top:6px; border-top:1px solid #e0e0e0; font-size:10px; color:#999; line-height:1.5;">
+                <strong style="color:#666;">How to read:</strong> UPGMA tree based on Jaccard distance of pangenome cluster presence/absence. Genomes sharing more clusters are closer. Branch length = distance at which two groups merge. Hover leaf labels for genome details.
             </div>
         `;
+    }
+
+    function toggleTreeStat(idx) {
+        TREE_STATS[idx].enabled = !TREE_STATS[idx].enabled;
+        renderTree();
+    }
+
+    function renderTree() {
+        if (!treeData) return;
+        const container = document.getElementById('tree-container');
+        const d = treeData;
+        const leafOrder = d.leaf_order;
+        const n = leafOrder.length;
+        const linkage = d.linkage;
+
+        // Layout params
+        const leafH = 24;
+        const marginTop = 20;
+        const marginBottom = 40;
+        const labelWidth = 200;
+        const treeWidth = 400;
+        const enabledStats = TREE_STATS.filter(s => s.enabled);
+        const statBarWidth = enabledStats.length > 0 ? 60 * enabledStats.length : 0;
+        const statGap = 16;
+        const totalW = labelWidth + treeWidth + statGap + statBarWidth + 40;
+        const totalH = marginTop + n * leafH + marginBottom;
+
+        // Build node positions from linkage
+        // Leaves: indices 0..n-1, internal nodes: n..2n-2
+        const nodeY = new Array(2 * n - 1);
+        const nodeX = new Array(2 * n - 1);
+        const nodeDepth = new Array(2 * n - 1).fill(0);
+
+        // Assign leaf Y positions based on leaf_order
+        const leafIdx = {};
+        d.genome_ids.forEach((gid, i) => { leafIdx[gid] = i; });
+        leafOrder.forEach((gid, pos) => {
+            const li = leafIdx[gid];
+            nodeY[li] = marginTop + pos * leafH + leafH / 2;
+            nodeX[li] = 0;
+        });
+
+        // Max distance for X scaling - use sqrt scale to spread out compressed small distances
+        const maxDist = linkage.reduce((m, r) => Math.max(m, r[2]), 0);
+        const xScale = (dist) => treeWidth * Math.sqrt(dist / maxDist);
+
+        // Internal nodes - compute positions and track depth
+        for (let i = 0; i < linkage.length; i++) {
+            const [a, b, dist] = linkage[i];
+            const ni = n + i;
+            nodeY[ni] = (nodeY[a] + nodeY[b]) / 2;
+            nodeX[ni] = xScale(dist);
+            nodeDepth[ni] = Math.max(nodeDepth[a], nodeDepth[b]) + 1;
+        }
+
+        // Build subtree leaf ranges for coloring clades
+        const subtreeMin = new Array(2 * n - 1);
+        const subtreeMax = new Array(2 * n - 1);
+        // For leaves, min = max = their position in leaf order
+        const leafPosMap = {};
+        leafOrder.forEach((gid, pos) => { leafPosMap[leafIdx[gid]] = pos; });
+        for (let i = 0; i < n; i++) {
+            subtreeMin[i] = leafPosMap[i] !== undefined ? leafPosMap[i] : 0;
+            subtreeMax[i] = subtreeMin[i];
+        }
+        for (let i = 0; i < linkage.length; i++) {
+            const [a, b] = linkage[i];
+            const ni = n + i;
+            subtreeMin[ni] = Math.min(subtreeMin[a], subtreeMin[b]);
+            subtreeMax[ni] = Math.max(subtreeMax[a], subtreeMax[b]);
+        }
+
+        // SVG
+        let svg = `<svg width="${totalW}" height="${totalH}" xmlns="http://www.w3.org/2000/svg" style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;">`;
+
+        // Distance reference lines (drawn first, behind branches)
+        const scaleY = totalH - 15;
+        const scaleDists = [0.05, 0.1, 0.2, 0.3, 0.5];
+        scaleDists.forEach(dv => {
+            if (dv <= maxDist) {
+                const sx = labelWidth + xScale(dv);
+                svg += `<line x1="${sx}" y1="${marginTop - 5}" x2="${sx}" y2="${scaleY}" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="4,4"/>`;
+                svg += `<text x="${sx}" y="${scaleY + 12}" text-anchor="middle" font-size="9" fill="#94a3b8">J=${dv}</text>`;
+            }
+        });
+
+        // Draw branches (elbow style) with depth-based styling
+        // Deeper (closer to leaves) = more opaque; shallower (closer to root) = lighter
+        const maxDepth = Math.max(...nodeDepth);
+        for (let i = 0; i < linkage.length; i++) {
+            const [a, b, dist] = linkage[i];
+            const ni = n + i;
+            const px = labelWidth + nodeX[ni];
+            const ay = nodeY[a], by = nodeY[b];
+            const ax = labelWidth + nodeX[a], bx = labelWidth + nodeX[b];
+            // Depth-based opacity: deeper merges (near leaves) darker, root merges lighter
+            const depth = nodeDepth[ni];
+            const opacity = 0.4 + 0.5 * (depth / Math.max(maxDepth, 1));
+            const strokeW = depth <= 2 ? 1.0 : 1.5;
+            const color = '#64748b';
+
+            // Horizontal line from child A to parent x
+            svg += `<line x1="${ax}" y1="${ay}" x2="${px}" y2="${ay}" stroke="${color}" stroke-width="${strokeW}" opacity="${opacity.toFixed(2)}"/>`;
+            // Horizontal line from child B to parent x
+            svg += `<line x1="${bx}" y1="${by}" x2="${px}" y2="${by}" stroke="${color}" stroke-width="${strokeW}" opacity="${opacity.toFixed(2)}"/>`;
+            // Vertical line connecting children at parent's x
+            svg += `<line x1="${px}" y1="${ay}" x2="${px}" y2="${by}" stroke="${color}" stroke-width="${strokeW}" opacity="${opacity.toFixed(2)}"/>`;
+
+            // Small node dot at merge point for clarity
+            if (depth >= 3) {
+                svg += `<circle cx="${px}" cy="${nodeY[ni]}" r="1.5" fill="${color}" opacity="${(opacity * 0.6).toFixed(2)}"/>`;
+            }
+        }
+
+        // Stat bar scaling
+        const statMaxes = {};
+        enabledStats.forEach(s => {
+            let mx = 0;
+            Object.values(d.genome_stats).forEach(gs => { if (gs[s.id] > mx) mx = gs[s.id]; });
+            statMaxes[s.id] = mx || 1;
+        });
+
+        // Draw leaves
+        leafOrder.forEach((gid, pos) => {
+            const y = marginTop + pos * leafH + leafH / 2;
+            const isUser = gid === d.user_genome_id;
+            const meta = d.genome_metadata[gid] || {};
+            const stats = d.genome_stats[gid] || {};
+            const tax = meta.tax || {};
+            const shortId = gid.replace('RS_GCF_', 'GCF_').replace(/\.1$/, '');
+            const displayName = tax.species || shortId;
+            const label = isUser ? `${gid} (YOUR GENOME)` : displayName;
+            const textColor = isUser ? '#dc2626' : '#374151';
+            const fontWeight = isUser ? '700' : '400';
+            const fontSize = isUser ? '12' : '11';
+
+            // Leaf dot
+            svg += `<circle cx="${labelWidth}" cy="${y}" r="${isUser ? 4 : 3}" fill="${isUser ? '#dc2626' : '#64748b'}"/>`;
+
+            // Highlight band for user genome
+            if (isUser) {
+                svg += `<rect x="0" y="${y - leafH/2}" width="${totalW}" height="${leafH}" fill="#fef2f2" opacity="0.5"/>`;
+            }
+
+            // Label (right-aligned to labelWidth)
+            const labelX = labelWidth - 8;
+            svg += `<g class="tree-leaf ${isUser ? 'user-genome' : ''}" data-gid="${gid}" style="cursor:pointer;">`;
+            // Invisible hit area for hover
+            svg += `<rect x="0" y="${y - leafH/2}" width="${labelWidth}" height="${leafH}" fill="transparent"/>`;
+            svg += `<text x="${labelX}" y="${y + 4}" text-anchor="end" font-size="${fontSize}" fill="${textColor}" font-weight="${fontWeight}">${label}</text>`;
+            svg += `</g>`;
+
+            // Stat bars
+            if (enabledStats.length > 0) {
+                const barStart = labelWidth + treeWidth + statGap;
+                const barW = statBarWidth / enabledStats.length;
+                enabledStats.forEach((s, si) => {
+                    const val = stats[s.id] || 0;
+                    const w = (val / statMaxes[s.id]) * (barW - 6);
+                    const bx = barStart + si * barW;
+                    // Background track
+                    svg += `<rect x="${bx}" y="${y - 6}" width="${barW - 6}" height="12" fill="#f1f5f9" rx="1"/>`;
+                    // Value bar
+                    svg += `<rect x="${bx}" y="${y - 6}" width="${w}" height="12" fill="${s.color}" opacity="0.7" rx="1"/>`;
+                });
+            }
+        });
+
+        // Stat bar headers
+        if (enabledStats.length > 0) {
+            const barStart = labelWidth + treeWidth + statGap;
+            const barW = statBarWidth / enabledStats.length;
+            enabledStats.forEach((s, si) => {
+                const bx = barStart + si * barW;
+                svg += `<text x="${bx + (barW - 6)/2}" y="12" text-anchor="middle" font-size="9" fill="${s.color}" font-weight="600">${s.short || s.name}</text>`;
+            });
+        }
+
+        // Scale axis label
+        svg += `<text x="${labelWidth + treeWidth/2}" y="${totalH - 2}" text-anchor="middle" font-size="9" fill="#94a3b8">Jaccard distance (sqrt scale)</text>`;
+
+        svg += '</svg>';
+        container.innerHTML = svg;
+
+        // Tooltips on leaf hover
+        const tooltip = document.getElementById('tree-tooltip');
+        container.querySelectorAll('.tree-leaf').forEach(leaf => {
+            leaf.addEventListener('mouseenter', (e) => {
+                const gid = leaf.dataset.gid;
+                const meta = treeData.genome_metadata[gid] || {};
+                const stats = treeData.genome_stats[gid] || {};
+                const tax = meta.tax || {};
+                const ani = meta.ani_to_user != null ? meta.ani_to_user + '%' : 'N/A';
+                tooltip.innerHTML = `
+                    <div style="font-weight:700; color:#60a5fa; margin-bottom:4px;">${gid}</div>
+                    <div>${tax.species || 'Unknown species'}</div>
+                    <div style="color:#9ca3af; font-size:10px;">${[tax.phylum, tax.class, tax.order, tax.family, tax.genus].filter(Boolean).join(' > ')}</div>
+                    <div style="margin-top:6px;"><span style="color:#9ca3af;">Features:</span> ${meta.n_features || '?'} | <span style="color:#9ca3af;">Contigs:</span> ${meta.n_contigs || '?'}</div>
+                    <div><span style="color:#9ca3af;">Genes:</span> ${stats.n_genes || '?'} | <span style="color:#9ca3af;">Clusters:</span> ${stats.n_clusters || '?'} | <span style="color:#9ca3af;">Core:</span> ${stats.core_pct != null ? (stats.core_pct * 100).toFixed(1) + '%' : '?'}</div>
+                    <div><span style="color:#9ca3af;">ANI to user:</span> ${ani}</div>
+                `;
+                tooltip.style.display = 'block';
+                const rect = leaf.getBoundingClientRect();
+                tooltip.style.left = (rect.right + 10) + 'px';
+                tooltip.style.top = Math.max(10, rect.top - 30) + 'px';
+            });
+            leaf.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+        });
+    }
+
+    // ============================================================
+    // === CLUSTER VIEW ===
+    // ============================================================
+    async function loadClusterData() {
+        try {
+            const clusterFile = (CONFIG && CONFIG.data_files && CONFIG.data_files.cluster) || 'cluster_data.json';
+            const resp = await fetch(clusterFile);
+            clusterData = await resp.json();
+            clusterLoaded = true;
+            clusterCanvas = document.getElementById('cluster-canvas');
+            clusterCtx = clusterCanvas.getContext('2d');
+            resizeCluster();
+            renderCluster();
+            setupClusterEvents();
+            const core = genes.filter(g => g[F.PAN_CAT] === 2).length;
+            const acc = genes.filter(g => g[F.PAN_CAT] === 1).length;
+            const unk = genes.filter(g => g[F.PAN_CAT] === 0).length;
+            document.getElementById('cluster-info').innerHTML = `
+                <div><strong>${genes.length.toLocaleString()}</strong> genes plotted</div>
+                <div style="font-size:10px; color:#888; margin-top:2px;">${core} core, ${acc} accessory, ${unk} unknown</div>
+                <div style="margin-top:8px; font-size:10px; color:#999; line-height:1.5;">
+                    <strong style="color:#666;">How to read:</strong> Each dot is one gene. Genes that are close together have similar properties. Change <em>Embedding</em> to explore different similarity measures. Change <em>Color By</em> to highlight patterns. Hover for gene info, click for full details.
+                </div>
+                <div style="margin-top:6px; font-size:10px; color:#999; line-height:1.5;">
+                    <strong style="color:#666;">Gene Features:</strong> UMAP of 23 gene properties (conservation, consistency scores, annotation counts, protein length). Groups genes with similar functional profiles.
+                </div>
+                <div style="margin-top:4px; font-size:10px; color:#999; line-height:1.5;">
+                    <strong style="color:#666;">Presence/Absence:</strong> UMAP of binary cluster membership across ${(CONFIG && CONFIG.n_ref_genomes) || 35} reference genomes. Groups genes with similar phylogenetic distribution.
+                </div>
+            `;
+        } catch (e) {
+            console.error('Failed to load cluster data:', e);
+            document.getElementById('cluster-info').textContent = 'Error loading cluster_data.json';
+        }
+    }
+
+    function resizeCluster() {
+        if (!clusterCanvas) return;
+        const container = clusterCanvas.parentElement;
+        clusterCanvas.width = container.clientWidth;
+        clusterCanvas.height = container.clientHeight;
+    }
+
+    function changeClusterEmbedding() {
+        clusterEmbedding = document.getElementById('cluster-embedding').value;
+        const descEl = document.getElementById('cluster-embed-desc');
+        if (clusterEmbedding === 'features') {
+            descEl.textContent = 'UMAP of conservation, consistency scores, annotation counts, protein length';
+        } else {
+            const nRef = (CONFIG && CONFIG.n_ref_genomes) || 35;
+            descEl.textContent = `UMAP of pangenome cluster presence/absence across ${nRef} reference genomes`;
+        }
+        renderCluster();
+    }
+
+    function changeClusterColor() {
+        clusterColorBy = document.getElementById('cluster-color-by').value;
+        renderCluster();
+    }
+
+    function getClusterColor(gene, colorBy) {
+        switch (colorBy) {
+            case 'pan_category': return COLORS.categorical(gene[F.PAN_CAT]);
+            case 'conservation': return COLORS.sequential(gene[F.CONS_FRAC]);
+            case 'avg_cons': return COLORS.consistency(gene[F.AVG_CONS]);
+            case 'is_hypo': return COLORS.binary(gene[F.IS_HYPO] ? 0 : 1);
+            case 'localization': return COLORS.categorical(gene[F.LOC]);
+            case 'n_ko': return COLORS.sequential(Math.min(gene[F.N_KO] / 4, 1));
+            case 'n_modules': return COLORS.sequential(Math.min(gene[F.N_MODULES] / 5, 1));
+            case 'cluster_size': return COLORS.sequential(Math.min(gene[F.CLUSTER_SIZE] / 200, 1));
+            case 'specificity': return COLORS.consistency(gene[F.SPECIFICITY]);
+            case 'agreement': return COLORS.categorical(gene[F.AGREEMENT]);
+            default: return '#6366f1';
+        }
+    }
+
+    function renderCluster() {
+        if (!clusterData || !clusterCtx || !genes.length) return;
+        const ctx2 = clusterCtx;
+        const w = clusterCanvas.width, h = clusterCanvas.height;
+        ctx2.fillStyle = '#ffffff';
+        ctx2.fillRect(0, 0, w, h);
+
+        const emb = clusterData[clusterEmbedding];
+        if (!emb) return;
+        const xs = emb.x, ys = emb.y;
+        const n = xs.length;
+
+        // Compute bounds with padding
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (let i = 0; i < n; i++) {
+            if (xs[i] < xMin) xMin = xs[i];
+            if (xs[i] > xMax) xMax = xs[i];
+            if (ys[i] < yMin) yMin = ys[i];
+            if (ys[i] > yMax) yMax = ys[i];
+        }
+        const pad = 40;
+        const xRange = xMax - xMin || 1;
+        const yRange = yMax - yMin || 1;
+        const scale = Math.min((w - 2 * pad) / xRange, (h - 2 * pad) / yRange);
+        const offX = (w - xRange * scale) / 2;
+        const offY = (h - yRange * scale) / 2;
+
+        const toScreenX = (v) => offX + (v - xMin) * scale;
+        const toScreenY = (v) => offY + (v - yMin) * scale;
+
+        const hasSearch = clusterSearchMatches.size > 0;
+        const dotR = Math.max(2, Math.min(4, w / 400));
+
+        // Draw dots
+        for (let i = 0; i < n; i++) {
+            const sx = toScreenX(xs[i]);
+            const sy = toScreenY(ys[i]);
+            const gene = genes[i];
+            const color = getClusterColor(gene, clusterColorBy);
+            ctx2.beginPath();
+            ctx2.arc(sx, sy, dotR, 0, Math.PI * 2);
+            ctx2.fillStyle = color;
+            if (hasSearch && !clusterSearchMatches.has(i)) {
+                ctx2.globalAlpha = 0.1;
+            }
+            ctx2.fill();
+            ctx2.globalAlpha = 1.0;
+        }
+
+        // Highlight search matches
+        if (hasSearch) {
+            for (const i of clusterSearchMatches) {
+                const sx = toScreenX(xs[i]);
+                const sy = toScreenY(ys[i]);
+                ctx2.beginPath();
+                ctx2.arc(sx, sy, dotR + 2, 0, Math.PI * 2);
+                ctx2.strokeStyle = '#f59e0b';
+                ctx2.lineWidth = 2;
+                ctx2.stroke();
+            }
+        }
+
+        renderClusterLegend();
+    }
+
+    function renderClusterLegend() {
+        const legend = document.getElementById('cluster-legend');
+        let html = '';
+        switch (clusterColorBy) {
+            case 'pan_category':
+                html = '<div class="legend-item"><div class="legend-color" style="background:#9ca3af"></div>Unknown</div>' +
+                    '<div class="legend-item"><div class="legend-color" style="background:#f59e0b"></div>Accessory</div>' +
+                    '<div class="legend-item"><div class="legend-color" style="background:#22c55e"></div>Core</div>';
+                break;
+            case 'conservation':
+            case 'n_ko': case 'n_modules': case 'cluster_size':
+                html = '<div class="legend-item"><span>Low</span><div class="legend-color" style="background: linear-gradient(to right, rgb(235,240,250), rgb(45,100,180)); width: 50px;"></div><span>High</span></div>';
+                break;
+            case 'avg_cons': case 'specificity':
+                html = '<div class="legend-item"><span>0</span><div class="legend-color" style="background: linear-gradient(to right, #ef4444, #fbbf24, #22c55e); width: 50px;"></div><span>1</span><div class="legend-color" style="background: #e5e7eb;"></div>N/A</div>';
+                break;
+            case 'is_hypo':
+                html = '<div class="legend-item"><div class="legend-color" style="background:#6366f1"></div>Has function</div><div class="legend-item"><div class="legend-color" style="background:#f97316"></div>Hypothetical</div>';
+                break;
+            case 'localization':
+                html = LOC_NAMES.map((name, i) => `<div class="legend-item"><div class="legend-color" style="background:${COLORS.categorical(i)}"></div>${name}</div>`).join('');
+                break;
+            case 'agreement':
+                html = AGREE_NAMES.map((name, i) => `<div class="legend-item"><div class="legend-color" style="background:${COLORS.categorical(i)}"></div>${name}</div>`).join('');
+                break;
+        }
+        legend.innerHTML = html;
+    }
+
+    function setupClusterEvents() {
+        if (!clusterCanvas) return;
+        const tooltip = document.getElementById('cluster-tooltip');
+
+        clusterCanvas.addEventListener('mousemove', (e) => {
+            if (!clusterData || !genes.length) return;
+            const rect = clusterCanvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+            const emb = clusterData[clusterEmbedding];
+            const xs = emb.x, ys = emb.y;
+            const w = clusterCanvas.width, h = clusterCanvas.height;
+
+            let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+            for (let i = 0; i < xs.length; i++) {
+                if (xs[i] < xMin) xMin = xs[i]; if (xs[i] > xMax) xMax = xs[i];
+                if (ys[i] < yMin) yMin = ys[i]; if (ys[i] > yMax) yMax = ys[i];
+            }
+            const pad = 40;
+            const xRange = xMax - xMin || 1, yRange = yMax - yMin || 1;
+            const scale = Math.min((w - 2 * pad) / xRange, (h - 2 * pad) / yRange);
+            const offX = (w - xRange * scale) / 2, offY = (h - yRange * scale) / 2;
+
+            // Find nearest gene
+            let bestDist = 100, bestIdx = -1;
+            for (let i = 0; i < xs.length; i++) {
+                const sx = offX + (xs[i] - xMin) * scale;
+                const sy = offY + (ys[i] - yMin) * scale;
+                const d = Math.hypot(sx - mx, sy - my);
+                if (d < bestDist) { bestDist = d; bestIdx = i; }
+            }
+
+            if (bestIdx >= 0 && bestDist < 15) {
+                const gene = genes[bestIdx];
+                tooltip.innerHTML = `
+                    <div class="gene-id">Gene ${gene[F.FID]}</div>
+                    <div class="tt-row"><span class="tt-label">Position</span><span class="tt-val">${gene[F.START]} | ${gene[F.STRAND] ? '+' : '-'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Pangenome</span><span class="tt-val">${PAN_NAMES[gene[F.PAN_CAT]]} (${(gene[F.CONS_FRAC] * 100).toFixed(0)}%)</span></div>
+                    <div class="tt-row"><span class="tt-label">Avg Consistency</span><span class="tt-val">${gene[F.AVG_CONS] < 0 ? 'N/A' : gene[F.AVG_CONS].toFixed(3)}</span></div>
+                    <div class="func">${gene[F.FUNC] || 'No function annotation'}</div>
+                `;
+                tooltip.style.display = 'block';
+                tooltip.style.left = Math.min(e.clientX + 12, window.innerWidth - 380) + 'px';
+                tooltip.style.top = Math.min(e.clientY + 12, window.innerHeight - 180) + 'px';
+            } else {
+                tooltip.style.display = 'none';
+            }
+        });
+
+        clusterCanvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+
+        clusterCanvas.addEventListener('click', (e) => {
+            if (!clusterData || !genes.length) return;
+            const rect = clusterCanvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+            const emb = clusterData[clusterEmbedding];
+            const xs = emb.x, ys = emb.y;
+            const w = clusterCanvas.width, h = clusterCanvas.height;
+            let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+            for (let i = 0; i < xs.length; i++) {
+                if (xs[i] < xMin) xMin = xs[i]; if (xs[i] > xMax) xMax = xs[i];
+                if (ys[i] < yMin) yMin = ys[i]; if (ys[i] > yMax) yMax = ys[i];
+            }
+            const pad = 40;
+            const xRange = xMax - xMin || 1, yRange = yMax - yMin || 1;
+            const scale = Math.min((w - 2 * pad) / xRange, (h - 2 * pad) / yRange);
+            const offX = (w - xRange * scale) / 2, offY = (h - yRange * scale) / 2;
+            let bestDist = 100, bestIdx = -1;
+            for (let i = 0; i < xs.length; i++) {
+                const sx = offX + (xs[i] - xMin) * scale;
+                const sy = offY + (ys[i] - yMin) * scale;
+                const d = Math.hypot(sx - mx, sy - my);
+                if (d < bestDist) { bestDist = d; bestIdx = i; }
+            }
+            if (bestIdx >= 0 && bestDist < 15) {
+                showGeneDetail(bestIdx);
+            }
+        });
+
+        // Cluster search
+        let clusterSearchTimeout;
+        document.getElementById('cluster-search').addEventListener('input', (e) => {
+            clearTimeout(clusterSearchTimeout);
+            clusterSearchTimeout = setTimeout(() => {
+                const q = e.target.value.trim().toLowerCase();
+                const info = document.getElementById('cluster-search-info');
+                clusterSearchMatches.clear();
+                if (q.length < 2) { info.style.display = 'none'; renderCluster(); return; }
+                genes.forEach((g, i) => {
+                    const fid = String(g[F.FID]).toLowerCase();
+                    const func = (g[F.FUNC] || '').toLowerCase();
+                    if (fid.includes(q) || func.includes(q)) clusterSearchMatches.add(i);
+                });
+                info.textContent = `${clusterSearchMatches.size} matches`;
+                info.style.display = 'block';
+                renderCluster();
+            }, 200);
+        });
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            if (activeTab === 'cluster') { resizeCluster(); renderCluster(); }
+        });
     }
 
     // Start

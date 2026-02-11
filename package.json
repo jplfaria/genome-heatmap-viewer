@@ -1,0 +1,24 @@
+{
+  "name": "genome-heatmap-viewer",
+  "version": "1.0.0",
+  "description": "A multi-track genome visualization tool for displaying genomic data as interactive heatmaps. Built for KBase/BERDL integration.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jplfaria/genome-heatmap-viewer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jplfaria/genome-heatmap-viewer/issues"
+  },
+  "homepage": "https://github.com/jplfaria/genome-heatmap-viewer#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

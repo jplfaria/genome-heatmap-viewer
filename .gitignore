@@ -17,6 +17,15 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Node / Playwright
+node_modules/
+test-results/
+.playwright-mcp/
+playwright-report/
+
+# Screenshots (development artifacts)
+*.png
+
 # Large data files (can be regenerated)
 # Uncomment if you don't want to track data files:
 # *.db
