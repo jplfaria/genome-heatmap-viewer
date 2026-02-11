@@ -633,6 +633,8 @@
         <div class="main">
             <div class="cluster-toolbar" id="cluster-toolbar">
                 <span id="cluster-toolbar-info">UMAP projection of 4,617 genes</span>
+                <span id="cluster-zoom-info" style="margin-left:8px; font-size:11px; color:#888;"></span>
+                <button id="cluster-reset-zoom" style="margin-left:auto; padding:3px 10px; font-size:11px; border:1px solid #d1d5db; border-radius:4px; background:#fff; color:#555; cursor:pointer; display:none;" onclick="resetClusterZoom()">Reset Zoom</button>
             </div>
             <div class="cluster-container">
                 <canvas id="cluster-canvas"></canvas>
@@ -922,6 +924,8 @@
     let clusterColorBy = 'pan_category';
     let clusterCanvas, clusterCtx;
     let clusterSearchMatches = new Set();
+    let clusterZoom = 1, clusterPanX = 0, clusterPanY = 0;
+    let clusterDragging = false, clusterDragStartX = 0, clusterDragStartY = 0, clusterDragPanX = 0, clusterDragPanY = 0;
 
     // Tree stat bar config
     const TREE_STATS = [
@@ -2152,6 +2156,7 @@
             const nRef = (CONFIG && CONFIG.n_ref_genomes) || 35;
             descEl.textContent = `UMAP of pangenome cluster presence/absence across ${nRef} reference genomes`;
         }
+        clusterZoom = 1; clusterPanX = 0; clusterPanY = 0;
         renderCluster();
     }
 
@@ -2176,43 +2181,63 @@
         }
     }
 
-    function renderCluster() {
-        if (!clusterData || !clusterCtx || !genes.length) return;
-        const ctx2 = clusterCtx;
-        const w = clusterCanvas.width, h = clusterCanvas.height;
-        ctx2.fillStyle = '#ffffff';
-        ctx2.fillRect(0, 0, w, h);
-
+    function getClusterTransform() {
         const emb = clusterData[clusterEmbedding];
-        if (!emb) return;
+        if (!emb) return null;
         const xs = emb.x, ys = emb.y;
-        const n = xs.length;
-
-        // Compute bounds with padding
+        const w = clusterCanvas.width, h = clusterCanvas.height;
         let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
-        for (let i = 0; i < n; i++) {
-            if (xs[i] < xMin) xMin = xs[i];
-            if (xs[i] > xMax) xMax = xs[i];
-            if (ys[i] < yMin) yMin = ys[i];
-            if (ys[i] > yMax) yMax = ys[i];
+        for (let i = 0; i < xs.length; i++) {
+            if (xs[i] < xMin) xMin = xs[i]; if (xs[i] > xMax) xMax = xs[i];
+            if (ys[i] < yMin) yMin = ys[i]; if (ys[i] > yMax) yMax = ys[i];
         }
         const pad = 40;
-        const xRange = xMax - xMin || 1;
-        const yRange = yMax - yMin || 1;
-        const scale = Math.min((w - 2 * pad) / xRange, (h - 2 * pad) / yRange);
-        const offX = (w - xRange * scale) / 2;
-        const offY = (h - yRange * scale) / 2;
+        const xRange = xMax - xMin || 1, yRange = yMax - yMin || 1;
+        const baseScale = Math.min((w - 2 * pad) / xRange, (h - 2 * pad) / yRange);
+        const baseOffX = (w - xRange * baseScale) / 2;
+        const baseOffY = (h - yRange * baseScale) / 2;
+        return {
+            xs, ys, w, h, xMin, yMin, baseScale, baseOffX, baseOffY,
+            toScreenX: (v) => (baseOffX + (v - xMin) * baseScale) * clusterZoom + clusterPanX,
+            toScreenY: (v) => (baseOffY + (v - yMin) * baseScale) * clusterZoom + clusterPanY,
+        };
+    }
 
-        const toScreenX = (v) => offX + (v - xMin) * scale;
-        const toScreenY = (v) => offY + (v - yMin) * scale;
+    function resetClusterZoom() {
+        clusterZoom = 1; clusterPanX = 0; clusterPanY = 0;
+        renderCluster();
+    }
 
+    function updateClusterZoomUI() {
+        const btn = document.getElementById('cluster-reset-zoom');
+        const info = document.getElementById('cluster-zoom-info');
+        if (clusterZoom > 1.05) {
+            btn.style.display = '';
+            info.textContent = `${clusterZoom.toFixed(1)}x zoom`;
+        } else {
+            btn.style.display = 'none';
+            info.textContent = '';
+        }
+    }
+
+    function renderCluster() {
+        if (!clusterData || !clusterCtx || !genes.length) return;
+        const t = getClusterTransform();
+        if (!t) return;
+        const ctx2 = clusterCtx;
+        ctx2.fillStyle = '#ffffff';
+        ctx2.fillRect(0, 0, t.w, t.h);
+
+        const { xs, ys, toScreenX, toScreenY } = t;
+        const n = xs.length;
         const hasSearch = clusterSearchMatches.size > 0;
-        const dotR = Math.max(2, Math.min(4, w / 400));
+        const baseDotR = Math.max(2, Math.min(4, t.w / 400));
+        const dotR = Math.min(baseDotR * Math.sqrt(clusterZoom), 20);
 
-        // Draw dots
         for (let i = 0; i < n; i++) {
             const sx = toScreenX(xs[i]);
             const sy = toScreenY(ys[i]);
+            if (sx < -dotR || sx > t.w + dotR || sy < -dotR || sy > t.h + dotR) continue;
             const gene = genes[i];
             const color = getClusterColor(gene, clusterColorBy);
             ctx2.beginPath();
@@ -2225,11 +2250,11 @@
             ctx2.globalAlpha = 1.0;
         }
 
-        // Highlight search matches
         if (hasSearch) {
             for (const i of clusterSearchMatches) {
                 const sx = toScreenX(xs[i]);
                 const sy = toScreenY(ys[i]);
+                if (sx < -10 || sx > t.w + 10 || sy < -10 || sy > t.h + 10) continue;
                 ctx2.beginPath();
                 ctx2.arc(sx, sy, dotR + 2, 0, Math.PI * 2);
                 ctx2.strokeStyle = '#f59e0b';
@@ -2238,6 +2263,7 @@
             }
         }
 
+        updateClusterZoomUI();
         renderClusterLegend();
     }
 
@@ -2270,39 +2296,31 @@
         legend.innerHTML = html;
     }
 
+    function findNearestClusterGene(mx, my) {
+        const t = getClusterTransform();
+        if (!t) return -1;
+        let bestDist = 100, bestIdx = -1;
+        for (let i = 0; i < t.xs.length; i++) {
+            const sx = t.toScreenX(t.xs[i]);
+            const sy = t.toScreenY(t.ys[i]);
+            const d = Math.hypot(sx - mx, sy - my);
+            if (d < bestDist) { bestDist = d; bestIdx = i; }
+        }
+        return bestDist < 15 ? bestIdx : -1;
+    }
+
     function setupClusterEvents() {
         if (!clusterCanvas) return;
         const tooltip = document.getElementById('cluster-tooltip');
 
+        // Hover tooltip
         clusterCanvas.addEventListener('mousemove', (e) => {
-            if (!clusterData || !genes.length) return;
+            if (!clusterData || !genes.length || clusterDragging) return;
             const rect = clusterCanvas.getBoundingClientRect();
             const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-            const emb = clusterData[clusterEmbedding];
-            const xs = emb.x, ys = emb.y;
-            const w = clusterCanvas.width, h = clusterCanvas.height;
-
-            let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
-            for (let i = 0; i < xs.length; i++) {
-                if (xs[i] < xMin) xMin = xs[i]; if (xs[i] > xMax) xMax = xs[i];
-                if (ys[i] < yMin) yMin = ys[i]; if (ys[i] > yMax) yMax = ys[i];
-            }
-            const pad = 40;
-            const xRange = xMax - xMin || 1, yRange = yMax - yMin || 1;
-            const scale = Math.min((w - 2 * pad) / xRange, (h - 2 * pad) / yRange);
-            const offX = (w - xRange * scale) / 2, offY = (h - yRange * scale) / 2;
-
-            // Find nearest gene
-            let bestDist = 100, bestIdx = -1;
-            for (let i = 0; i < xs.length; i++) {
-                const sx = offX + (xs[i] - xMin) * scale;
-                const sy = offY + (ys[i] - yMin) * scale;
-                const d = Math.hypot(sx - mx, sy - my);
-                if (d < bestDist) { bestDist = d; bestIdx = i; }
-            }
-
-            if (bestIdx >= 0 && bestDist < 15) {
-                const gene = genes[bestIdx];
+            const idx = findNearestClusterGene(mx, my);
+            if (idx >= 0) {
+                const gene = genes[idx];
                 tooltip.innerHTML = `
                     <div class="gene-id">Gene ${gene[F.FID]}</div>
                     <div class="tt-row"><span class="tt-label">Position</span><span class="tt-val">${gene[F.START]} | ${gene[F.STRAND] ? '+' : '-'}</span></div>
@@ -2320,32 +2338,54 @@
 
         clusterCanvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
 
+        // Click for gene detail
         clusterCanvas.addEventListener('click', (e) => {
             if (!clusterData || !genes.length) return;
             const rect = clusterCanvas.getBoundingClientRect();
+            const idx = findNearestClusterGene(e.clientX - rect.left, e.clientY - rect.top);
+            if (idx >= 0) showGeneDetail(idx);
+        });
+
+        // Wheel zoom (centered on mouse)
+        clusterCanvas.addEventListener('wheel', (e) => {
+            if (!clusterData) return;
+            e.preventDefault();
+            const rect = clusterCanvas.getBoundingClientRect();
             const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-            const emb = clusterData[clusterEmbedding];
-            const xs = emb.x, ys = emb.y;
-            const w = clusterCanvas.width, h = clusterCanvas.height;
-            let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
-            for (let i = 0; i < xs.length; i++) {
-                if (xs[i] < xMin) xMin = xs[i]; if (xs[i] > xMax) xMax = xs[i];
-                if (ys[i] < yMin) yMin = ys[i]; if (ys[i] > yMax) yMax = ys[i];
-            }
-            const pad = 40;
-            const xRange = xMax - xMin || 1, yRange = yMax - yMin || 1;
-            const scale = Math.min((w - 2 * pad) / xRange, (h - 2 * pad) / yRange);
-            const offX = (w - xRange * scale) / 2, offY = (h - yRange * scale) / 2;
-            let bestDist = 100, bestIdx = -1;
-            for (let i = 0; i < xs.length; i++) {
-                const sx = offX + (xs[i] - xMin) * scale;
-                const sy = offY + (ys[i] - yMin) * scale;
-                const d = Math.hypot(sx - mx, sy - my);
-                if (d < bestDist) { bestDist = d; bestIdx = i; }
-            }
-            if (bestIdx >= 0 && bestDist < 15) {
-                showGeneDetail(bestIdx);
-            }
+            const oldZoom = clusterZoom;
+            const factor = e.deltaY > 0 ? 0.9 : 1.1;
+            clusterZoom = Math.max(1, Math.min(50, clusterZoom * factor));
+            // Keep the point under the mouse fixed
+            clusterPanX = mx - (mx - clusterPanX) * (clusterZoom / oldZoom);
+            clusterPanY = my - (my - clusterPanY) * (clusterZoom / oldZoom);
+            // Clamp pan when zoomed out to 1x
+            if (clusterZoom <= 1) { clusterPanX = 0; clusterPanY = 0; }
+            renderCluster();
+        }, { passive: false });
+
+        // Drag to pan
+        clusterCanvas.addEventListener('mousedown', (e) => {
+            if (!clusterData || clusterZoom <= 1) return;
+            clusterDragging = true;
+            clusterDragStartX = e.clientX;
+            clusterDragStartY = e.clientY;
+            clusterDragPanX = clusterPanX;
+            clusterDragPanY = clusterPanY;
+            clusterCanvas.style.cursor = 'grabbing';
+            tooltip.style.display = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!clusterDragging) return;
+            clusterPanX = clusterDragPanX + (e.clientX - clusterDragStartX);
+            clusterPanY = clusterDragPanY + (e.clientY - clusterDragStartY);
+            renderCluster();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!clusterDragging) return;
+            clusterDragging = false;
+            if (clusterCanvas) clusterCanvas.style.cursor = clusterZoom > 1 ? 'grab' : '';
         });
 
         // Cluster search
