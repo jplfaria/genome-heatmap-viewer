@@ -442,6 +442,23 @@
         .cluster-legend { display: flex; gap: 16px; padding: 6px 12px; background: #fafafa; border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; flex-wrap: wrap; flex-shrink: 0; }
         .cluster-legend .legend-item { display: flex; align-items: center; gap: 3px; }
         .cluster-select { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 11px; background: #fff; }
+        /* Metabolic Map View */
+        #metabolic-container { flex: 1; position: relative; overflow: hidden; background: #fff; }
+        #metabolic-container svg { width: 100%; height: 100%; }
+        .metabolic-toolbar { padding: 8px 12px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 12px; font-size: 11px; }
+        .metabolic-legend { padding: 8px 12px; font-size: 10px; color: #555; line-height: 1.8; }
+        .metabolic-legend .legend-row { display: flex; align-items: center; gap: 6px; }
+        .metabolic-legend .legend-swatch { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+        .metabolic-legend .gradient-bar { height: 12px; width: 100px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }
+        .rxn-detail { padding: 8px 12px; font-size: 11px; color: #555; line-height: 1.6; }
+        .rxn-detail .rxn-id { font-weight: 600; color: #1f2937; font-size: 12px; margin-bottom: 4px; }
+        .rxn-detail .rxn-eq { background: #f3f4f6; padding: 6px 8px; border-radius: 4px; font-size: 10px; margin: 6px 0; line-height: 1.5; word-break: break-word; }
+        .rxn-detail .rxn-row { display: flex; justify-content: space-between; padding: 2px 0; }
+        .rxn-detail .rxn-label { color: #6b7280; }
+        .rxn-detail .rxn-val { font-weight: 500; color: #1f2937; }
+        .rxn-gene-link { color: #2563eb; cursor: pointer; text-decoration: underline; }
+        .rxn-gene-link:hover { color: #1d4ed8; }
+        .metabolic-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: #9ca3af; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -452,6 +469,7 @@
         <button class="tab-btn active" data-tab="tracks" onclick="switchTab('tracks')">Tracks</button>
         <button class="tab-btn" data-tab="tree" onclick="switchTab('tree')">Tree</button>
         <button class="tab-btn" data-tab="cluster" onclick="switchTab('cluster')">Cluster</button>
+        <button class="tab-btn" data-tab="metabolic" onclick="switchTab('metabolic')">Metabolic Map</button>
     </div>
     <!-- Tab: Tracks -->
     <div class="tab-content active" id="tab-tracks">
@@ -641,6 +659,74 @@
                 <div class="tooltip" id="cluster-tooltip"></div>
             </div>
             <div class="cluster-legend" id="cluster-legend"></div>
+        </div>
+    </div>
+
+    <!-- Tab: Metabolic Map -->
+    <div class="tab-content" id="tab-metabolic">
+        <div class="sidebar">
+            <div class="sidebar-header">Metabolic Map</div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Map</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 6px 12px;">
+                    <select class="cluster-select" id="metabolic-map-select" onchange="changeMetabolicMap()" style="width:100%;">
+                        <option value="full">Global Metabolism</option>
+                        <option value="core">Core Metabolism</option>
+                    </select>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Color By</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 6px 12px;">
+                    <select class="cluster-select" id="metabolic-color-by" onchange="changeMetabolicColor()" style="width:100%;">
+                        <option value="conservation">Pangenome Conservation</option>
+                        <option value="presence">Presence / Absence</option>
+                        <option value="flux_rich">Flux (Rich Media)</option>
+                        <option value="flux_min">Flux (Minimal Media)</option>
+                        <option value="class_rich">Flux Class (Rich)</option>
+                        <option value="class_min">Flux Class (Minimal)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Legend</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div class="metabolic-legend" id="metabolic-legend"></div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Stats</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px; font-size: 11px; color: #666; line-height: 1.6;" id="metabolic-stats">
+                    Loading...
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Reaction Detail</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div class="rxn-detail" id="metabolic-rxn-detail">
+                    <span style="color:#9ca3af;">Click a reaction on the map to see details</span>
+                </div>
+            </div>
+        </div>
+        <div class="main" style="display:flex; flex-direction:column;">
+            <div class="metabolic-toolbar" id="metabolic-toolbar">
+                <span id="metabolic-toolbar-info">Metabolic pathway map</span>
+            </div>
+            <div id="metabolic-container">
+                <div class="metabolic-loading" id="metabolic-loading">Click the Metabolic Map tab to load...</div>
+            </div>
         </div>
     </div>
 
@@ -927,6 +1013,19 @@
     let clusterZoom = 1, clusterPanX = 0, clusterPanY = 0;
     let clusterDragging = false, clusterDragStartX = 0, clusterDragStartY = 0, clusterDragPanX = 0, clusterDragPanY = 0;
 
+    // Metabolic map state
+    let metabolicLoaded = false;
+    let reactionsData = null;
+    let escherBuilder = null;
+    let currentMapId = 'full';
+    let metabolicColorBy = 'conservation';
+    let cachedMaps = {};
+
+    // Flux class constants
+    const FLUX_CLASSES = ['blocked', 'forward_only', 'reverse_only', 'reversible', 'essential_forward', 'essential_reverse'];
+    const FLUX_CLASS_COLORS = { blocked: '#d1d5db', forward_only: '#3b82f6', reverse_only: '#8b5cf6', reversible: '#22c55e', essential_forward: '#ef4444', essential_reverse: '#f97316' };
+    const FLUX_CLASS_LABELS = { blocked: 'Blocked', forward_only: 'Forward Only', reverse_only: 'Reverse Only', reversible: 'Reversible', essential_forward: 'Essential (fwd)', essential_reverse: 'Essential (rev)' };
+
     // Tree stat bar config
     const TREE_STATS = [
         { id: 'n_genes', name: 'Gene Count', short: 'Genes', color: '#3b82f6', enabled: true },
@@ -948,6 +1047,7 @@
         });
         if (tabId === 'tree' && !treeLoaded) loadTreeData();
         if (tabId === 'cluster' && !clusterLoaded) loadClusterData();
+        if (tabId === 'metabolic' && !metabolicLoaded) loadMetabolicData();
         if (tabId === 'tracks') { resize(); render(); renderMinimap(); }
     }
 
@@ -2412,6 +2512,304 @@
         window.addEventListener('resize', () => {
             if (activeTab === 'cluster') { resizeCluster(); renderCluster(); }
         });
+    }
+
+    // ============================================================
+    // === METABOLIC MAP VIEW ===
+    // ============================================================
+
+    function loadEscherLibrary() {
+        return new Promise((resolve, reject) => {
+            if (window.escher) return resolve();
+            // Load D3 first (Escher needs it)
+            const d3Script = document.createElement('script');
+            d3Script.src = 'https://unpkg.com/d3@5.16.0/dist/d3.min.js';
+            d3Script.onload = () => {
+                const escherScript = document.createElement('script');
+                escherScript.src = 'https://unpkg.com/escher@1.7.3/dist/escher.min.js';
+                escherScript.onload = resolve;
+                escherScript.onerror = reject;
+                document.head.appendChild(escherScript);
+            };
+            d3Script.onerror = reject;
+            document.head.appendChild(d3Script);
+        });
+    }
+
+    async function loadMetabolicData() {
+        const loading = document.getElementById('metabolic-loading');
+        loading.textContent = 'Loading Escher library and reaction data...';
+        try {
+            const rxnFile = (CONFIG && CONFIG.data_files && CONFIG.data_files.reactions) || 'reactions_data.json';
+            const mapConfig = (CONFIG && CONFIG.data_files && CONFIG.data_files.metabolic_maps && CONFIG.data_files.metabolic_maps[currentMapId]) || {};
+            const mapFile = mapConfig.file || 'metabolic_map_full.json';
+
+            const [_, rxnResp, mapResp] = await Promise.all([
+                loadEscherLibrary(),
+                fetch(rxnFile),
+                fetch(mapFile)
+            ]);
+            reactionsData = await rxnResp.json();
+            const mapData = await mapResp.json();
+            cachedMaps[currentMapId] = mapData;
+            metabolicLoaded = true;
+            loading.style.display = 'none';
+            initEscherMap(mapData);
+            renderMetabolicStats();
+            renderMetabolicLegend();
+            updateMetabolicToolbar();
+        } catch (e) {
+            console.error('Failed to load metabolic data:', e);
+            loading.textContent = 'Error loading metabolic data. Check console.';
+        }
+    }
+
+    function initEscherMap(mapData) {
+        const container = document.getElementById('metabolic-container');
+        // Clear all previous content (Escher creates its own structure)
+        container.innerHTML = '';
+
+        const reactionData = buildReactionColorData(metabolicColorBy);
+        const scale = getReactionScale(metabolicColorBy);
+
+        try {
+            escherBuilder = escher.Builder(mapData, null, null, d3.select(container), {
+                menu: 'zoom',
+                scroll_behavior: 'zoom',
+                fill_screen: false,
+                reaction_data: reactionData,
+                reaction_styles: ['color', 'size'],
+                reaction_scale: scale,
+                never_ask_before_quit: true,
+                enable_editing: false,
+                enable_keys: false,
+            });
+            // Wire click events on reactions
+            setupMetabolicClickEvents();
+        } catch (e) {
+            console.error('Escher Builder error:', e);
+            container.innerHTML = '<div class="metabolic-loading">Error initializing Escher map. See console.</div>';
+        }
+    }
+
+    function buildReactionColorData(colorBy) {
+        if (!reactionsData) return {};
+        const data = {};
+        for (const [rxnId, rxn] of Object.entries(reactionsData.reactions)) {
+            switch (colorBy) {
+                case 'conservation': data[rxnId] = rxn.conservation; break;
+                case 'presence': data[rxnId] = 1; break;
+                case 'flux_rich': data[rxnId] = rxn.flux_rich; break;
+                case 'flux_min': data[rxnId] = rxn.flux_min; break;
+                case 'class_rich': data[rxnId] = FLUX_CLASSES.indexOf(rxn.class_rich); break;
+                case 'class_min': data[rxnId] = FLUX_CLASSES.indexOf(rxn.class_min); break;
+            }
+        }
+        return data;
+    }
+
+    function getReactionScale(colorBy) {
+        switch (colorBy) {
+            case 'conservation':
+                return [
+                    { type: 'min', color: '#e5e7eb', size: 6 },
+                    { type: 'value', value: 0.2, color: '#93c5fd', size: 8 },
+                    { type: 'value', value: 0.8, color: '#2563eb', size: 10 },
+                    { type: 'max', color: '#166534', size: 12 }
+                ];
+            case 'presence':
+                return [
+                    { type: 'min', color: '#22c55e', size: 10 },
+                    { type: 'max', color: '#22c55e', size: 10 }
+                ];
+            case 'flux_rich': case 'flux_min':
+                return [
+                    { type: 'min', color: '#3b82f6', size: 12 },
+                    { type: 'value', value: 0, color: '#f3f4f6', size: 6 },
+                    { type: 'max', color: '#ef4444', size: 12 }
+                ];
+            case 'class_rich': case 'class_min':
+                return [
+                    { type: 'value', value: 0, color: FLUX_CLASS_COLORS.blocked, size: 6 },
+                    { type: 'value', value: 1, color: FLUX_CLASS_COLORS.forward_only, size: 10 },
+                    { type: 'value', value: 2, color: FLUX_CLASS_COLORS.reverse_only, size: 10 },
+                    { type: 'value', value: 3, color: FLUX_CLASS_COLORS.reversible, size: 10 },
+                    { type: 'value', value: 4, color: FLUX_CLASS_COLORS.essential_forward, size: 12 },
+                    { type: 'value', value: 5, color: FLUX_CLASS_COLORS.essential_reverse, size: 12 }
+                ];
+            default: return [];
+        }
+    }
+
+    function renderMetabolicLegend() {
+        const el = document.getElementById('metabolic-legend');
+        let html = '';
+        switch (metabolicColorBy) {
+            case 'conservation':
+                html = `
+                    <div class="legend-row"><div class="legend-swatch" style="background:#e5e7eb"></div> Absent (0%)</div>
+                    <div class="legend-row"><div class="legend-swatch" style="background:#93c5fd"></div> Low (&lt;20%)</div>
+                    <div class="legend-row"><div class="legend-swatch" style="background:#2563eb"></div> Moderate (20-80%)</div>
+                    <div class="legend-row"><div class="legend-swatch" style="background:#166534"></div> High (&gt;80%)</div>
+                    <div class="legend-row"><div class="legend-swatch" style="background:#f3f4f6; border:1px dashed #ccc"></div> No data (not in model)</div>`;
+                break;
+            case 'presence':
+                html = `
+                    <div class="legend-row"><div class="legend-swatch" style="background:#22c55e"></div> Present in user genome</div>
+                    <div class="legend-row"><div class="legend-swatch" style="background:#f3f4f6; border:1px dashed #ccc"></div> Absent / No data</div>`;
+                break;
+            case 'flux_rich': case 'flux_min':
+                const media = metabolicColorBy === 'flux_rich' ? 'rich' : 'minimal';
+                html = `
+                    <div class="legend-row"><div class="legend-swatch" style="background:#3b82f6"></div> Reverse flux</div>
+                    <div class="legend-row"><div class="legend-swatch" style="background:#f3f4f6"></div> Zero flux</div>
+                    <div class="legend-row"><div class="legend-swatch" style="background:#ef4444"></div> Forward flux</div>
+                    <div class="legend-row" style="margin-top:2px; color:#999; font-size:9px">FBA solution on ${media} media</div>`;
+                break;
+            case 'class_rich': case 'class_min':
+                for (const cls of FLUX_CLASSES) {
+                    html += `<div class="legend-row"><div class="legend-swatch" style="background:${FLUX_CLASS_COLORS[cls]}"></div> ${FLUX_CLASS_LABELS[cls]}</div>`;
+                }
+                break;
+        }
+        el.innerHTML = html;
+    }
+
+    function renderMetabolicStats() {
+        if (!reactionsData) return;
+        const stats = reactionsData.stats;
+        // Count how many reactions on current map
+        const mapData = cachedMaps[currentMapId];
+        let onMap = 0, withData = 0;
+        if (mapData && mapData[1] && mapData[1].reactions) {
+            const mapRxns = mapData[1].reactions;
+            const totalOnMap = Object.keys(mapRxns).length;
+            for (const k of Object.keys(mapRxns)) {
+                const biggId = mapRxns[k].bigg_id;
+                if (reactionsData.reactions[biggId]) { withData++; onMap++; }
+                else onMap++;
+            }
+            const notOnMap = stats.total_reactions - withData;
+            document.getElementById('metabolic-stats').innerHTML = `
+                <div><strong>${stats.total_reactions}</strong> user genome reactions</div>
+                <div style="margin-top:4px;"><strong>${withData}</strong> shown on map (of ${totalOnMap} on map)</div>
+                <div><strong>${notOnMap}</strong> not on map</div>
+                <div style="margin-top:6px; border-top:1px solid #eee; padding-top:6px;">
+                    <div>Active (rich): <strong>${stats.active_rich}</strong></div>
+                    <div>Active (minimal): <strong>${stats.active_min}</strong></div>
+                    <div>Essential (rich): <strong>${stats.essential_rich}</strong></div>
+                    <div>Essential (minimal): <strong>${stats.essential_min}</strong></div>
+                    <div>Blocked (rich): <strong>${stats.blocked_rich}</strong></div>
+                </div>
+                <div style="margin-top:4px; font-size:10px; color:#999;">
+                    Data from ${reactionsData.n_genomes} genomes
+                </div>
+            `;
+        }
+    }
+
+    function updateMetabolicToolbar() {
+        const mapName = (CONFIG && CONFIG.data_files && CONFIG.data_files.metabolic_maps &&
+            CONFIG.data_files.metabolic_maps[currentMapId] && CONFIG.data_files.metabolic_maps[currentMapId].name) || currentMapId;
+        document.getElementById('metabolic-toolbar-info').textContent = `${mapName} — ${Object.keys(reactionsData.reactions).length} reactions`;
+    }
+
+    async function changeMetabolicMap() {
+        currentMapId = document.getElementById('metabolic-map-select').value;
+        if (cachedMaps[currentMapId]) {
+            initEscherMap(cachedMaps[currentMapId]);
+            renderMetabolicStats();
+            updateMetabolicToolbar();
+        } else {
+            const mapConfig = (CONFIG && CONFIG.data_files && CONFIG.data_files.metabolic_maps && CONFIG.data_files.metabolic_maps[currentMapId]) || {};
+            const mapFile = mapConfig.file || `metabolic_map_${currentMapId}.json`;
+            try {
+                const resp = await fetch(mapFile);
+                const mapData = await resp.json();
+                cachedMaps[currentMapId] = mapData;
+                initEscherMap(mapData);
+                renderMetabolicStats();
+                updateMetabolicToolbar();
+            } catch (e) {
+                console.error('Failed to load map:', e);
+            }
+        }
+    }
+
+    function changeMetabolicColor() {
+        metabolicColorBy = document.getElementById('metabolic-color-by').value;
+        if (escherBuilder) {
+            const data = buildReactionColorData(metabolicColorBy);
+            const scale = getReactionScale(metabolicColorBy);
+            escherBuilder.set_reaction_data(data);
+            // Rebuild with new scale (Escher doesn't have a set_reaction_scale API)
+            // So we reinitialize with the cached map
+            if (cachedMaps[currentMapId]) {
+                initEscherMap(cachedMaps[currentMapId]);
+            }
+        }
+        renderMetabolicLegend();
+    }
+
+    function setupMetabolicClickEvents() {
+        // Listen for clicks on reaction labels in the Escher SVG
+        setTimeout(() => {
+            const container = document.getElementById('metabolic-container');
+            const svg = container.querySelector('svg');
+            if (!svg) return;
+
+            svg.addEventListener('click', (e) => {
+                // Walk up from click target to find a .reaction group
+                const rxnGroup = e.target.closest('.reaction');
+                if (!rxnGroup) return;
+                // Get reaction ID from the label text inside this group
+                const label = rxnGroup.querySelector('.reaction-label');
+                const rxnId = label ? label.textContent.trim() : null;
+                if (rxnId) showReactionDetail(rxnId);
+            });
+        }, 500);
+    }
+
+    function showReactionDetail(rxnId) {
+        const rxn = reactionsData && reactionsData.reactions[rxnId];
+        const el = document.getElementById('metabolic-rxn-detail');
+        if (!rxn) {
+            el.innerHTML = `
+                <div class="rxn-id">${rxnId}</div>
+                <div style="color:#9ca3af;">No data for this reaction in user genome</div>`;
+            return;
+        }
+
+        // Parse gene string to find individual gene IDs
+        const geneStr = rxn.genes || '';
+        const geneLinks = geneStr ? geneStr.replace(/\b([A-Za-z][A-Za-z0-9_]+)\b/g, (match) => {
+            if (match === 'or' || match === 'and') return match;
+            const indices = reactionsData.gene_index && reactionsData.gene_index[match];
+            if (indices && indices.length > 0) {
+                return `<span class="rxn-gene-link" onclick="showGeneDetail(${indices[0]})">${match}</span>`;
+            }
+            return match;
+        }) : '<span style="color:#9ca3af">No gene assignment</span>';
+
+        const classColor = (cls) => `<span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${FLUX_CLASS_COLORS[cls] || '#ddd'}; margin-right:4px;"></span>${FLUX_CLASS_LABELS[cls] || cls}`;
+
+        el.innerHTML = `
+            <div class="rxn-id">${rxnId}</div>
+            <div class="rxn-eq">${rxn.equation || 'No equation'}</div>
+            <div class="rxn-row"><span class="rxn-label">Directionality</span><span class="rxn-val">${rxn.directionality}</span></div>
+            <div class="rxn-row"><span class="rxn-label">Conservation</span><span class="rxn-val">${(rxn.conservation * 100).toFixed(0)}% (${Math.round(rxn.conservation * reactionsData.n_genomes)}/${reactionsData.n_genomes})</span></div>
+            <div class="rxn-row"><span class="rxn-label">Gapfilling</span><span class="rxn-val">${rxn.gapfilling === 'none' ? 'No' : rxn.gapfilling}</span></div>
+            <div style="margin-top:6px; padding-top:6px; border-top:1px solid #eee;">
+                <div class="rxn-row"><span class="rxn-label">Flux (rich)</span><span class="rxn-val">${rxn.flux_rich.toFixed(4)}</span></div>
+                <div class="rxn-row"><span class="rxn-label">Class (rich)</span><span class="rxn-val">${classColor(rxn.class_rich)}</span></div>
+                <div class="rxn-row"><span class="rxn-label">Flux (minimal)</span><span class="rxn-val">${rxn.flux_min.toFixed(4)}</span></div>
+                <div class="rxn-row"><span class="rxn-label">Class (minimal)</span><span class="rxn-val">${classColor(rxn.class_min)}</span></div>
+            </div>
+            <div style="margin-top:6px; padding-top:6px; border-top:1px solid #eee;">
+                <div style="font-size:10px; font-weight:600; color:#6b7280; margin-bottom:4px;">GENES</div>
+                <div style="font-size:11px; line-height:1.6; word-break:break-word;">${geneLinks}</div>
+            </div>
+        `;
     }
 
     // Start

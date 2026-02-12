@@ -728,6 +728,123 @@ test.describe('Scientific Correctness', () => {
 });
 
 // =============================================================================
+// METABOLIC MAP TAB - FUNCTIONALITY
+// =============================================================================
+test.describe('Metabolic Map Tab - Functionality', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('#kpi-bar .kpi-stat');
+    await page.click('.tab-btn[data-tab="metabolic"]');
+    await page.waitForSelector('#metabolic-container svg', { timeout: 15000 });
+  });
+
+  test('Metabolic Map tab loads and shows Escher SVG', async ({ page }) => {
+    await expect(page.locator('#tab-metabolic')).toHaveClass(/active/);
+    const svg = page.locator('#metabolic-container svg');
+    await expect(svg).toBeVisible();
+  });
+
+  test('map selector has Full and Core options', async ({ page }) => {
+    const select = page.locator('#metabolic-map-select');
+    const options = select.locator('option');
+    await expect(options).toHaveCount(2);
+    await expect(options.nth(0)).toHaveText('Global Metabolism');
+    await expect(options.nth(1)).toHaveText('Core Metabolism');
+  });
+
+  test('color-by selector has all 6 options', async ({ page }) => {
+    const select = page.locator('#metabolic-color-by');
+    const options = select.locator('option');
+    await expect(options).toHaveCount(6);
+  });
+
+  test('switching to Core Metabolism loads different map', async ({ page }) => {
+    await page.selectOption('#metabolic-map-select', 'core');
+    await page.waitForTimeout(2000);
+    const stats = await page.locator('#metabolic-stats').textContent();
+    expect(stats).toContain('119');
+    expect(stats).toContain('201');
+  });
+
+  test('changing color mode updates legend', async ({ page }) => {
+    const legendBefore = await page.locator('#metabolic-legend').textContent();
+    await page.selectOption('#metabolic-color-by', 'class_rich');
+    await page.waitForTimeout(1000);
+    const legendAfter = await page.locator('#metabolic-legend').textContent();
+    expect(legendAfter).not.toBe(legendBefore);
+    expect(legendAfter).toContain('Blocked');
+    expect(legendAfter).toContain('Essential');
+  });
+
+  test('clicking a reaction shows detail in sidebar', async ({ page }) => {
+    await page.waitForTimeout(600); // wait for click handler registration
+    const clicked = await page.evaluate(() => {
+      const svg = document.querySelector('#metabolic-container svg');
+      const texts = svg.querySelectorAll('text');
+      const rxnText = Array.from(texts).find(t => t.textContent.match(/^rxn\d/));
+      if (rxnText) {
+        const rxnGroup = rxnText.closest('.reaction');
+        if (rxnGroup) {
+          rxnGroup.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          return rxnText.textContent;
+        }
+      }
+      return null;
+    });
+    expect(clicked).toBeTruthy();
+    await page.waitForTimeout(200);
+    const detail = await page.locator('#metabolic-rxn-detail').textContent();
+    expect(detail).toContain(clicked);
+  });
+});
+
+// =============================================================================
+// METABOLIC MAP TAB - DATA CORRECTNESS
+// =============================================================================
+test.describe('Metabolic Map Tab - Data Correctness', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('#kpi-bar .kpi-stat');
+    await page.click('.tab-btn[data-tab="metabolic"]');
+    await page.waitForSelector('#metabolic-container svg', { timeout: 15000 });
+  });
+
+  test('stats show correct total reaction count', async ({ page }) => {
+    const stats = await page.locator('#metabolic-stats').textContent();
+    expect(stats).toContain('1279');
+  });
+
+  test('Global Metabolism map shows correct coverage', async ({ page }) => {
+    const stats = await page.locator('#metabolic-stats').textContent();
+    expect(stats).toContain('508');
+    expect(stats).toContain('759');
+  });
+
+  test('SVG contains reaction elements', async ({ page }) => {
+    // Wait for Escher to render reaction groups (may take a moment after SVG appears)
+    await page.waitForSelector('#metabolic-container svg .reaction', { timeout: 10000 });
+    const rxnCount = await page.evaluate(() => {
+      const svg = document.querySelector('#metabolic-container svg');
+      return svg.querySelectorAll('.reaction').length;
+    });
+    expect(rxnCount).toBeGreaterThan(100);
+  });
+
+  test('toolbar shows map name and reaction count', async ({ page }) => {
+    const toolbar = await page.locator('#metabolic-toolbar').textContent();
+    expect(toolbar).toContain('Global Metabolism');
+    expect(toolbar).toContain('1279');
+  });
+
+  test('conservation legend has correct categories', async ({ page }) => {
+    const legend = await page.locator('#metabolic-legend').textContent();
+    expect(legend).toContain('Absent');
+    expect(legend).toContain('Low');
+    expect(legend).toContain('High');
+  });
+});
+
+// =============================================================================
 // TAB SWITCHING
 // =============================================================================
 test.describe('Tab Navigation', () => {
@@ -736,7 +853,7 @@ test.describe('Tab Navigation', () => {
     await page.waitForSelector('#kpi-bar .kpi-stat');
   });
 
-  test('can switch between all 3 tabs', async ({ page }) => {
+  test('can switch between all 4 tabs', async ({ page }) => {
     // Start on Tracks
     await expect(page.locator('#tab-tracks')).toHaveClass(/active/);
 
@@ -749,6 +866,11 @@ test.describe('Tab Navigation', () => {
     await page.click('.tab-btn[data-tab="cluster"]');
     await expect(page.locator('#tab-cluster')).toHaveClass(/active/);
     await expect(page.locator('#tab-tree')).not.toHaveClass(/active/);
+
+    // Switch to Metabolic Map
+    await page.click('.tab-btn[data-tab="metabolic"]');
+    await expect(page.locator('#tab-metabolic')).toHaveClass(/active/);
+    await expect(page.locator('#tab-cluster')).not.toHaveClass(/active/);
 
     // Switch back to Tracks
     await page.click('.tab-btn[data-tab="tracks"]');

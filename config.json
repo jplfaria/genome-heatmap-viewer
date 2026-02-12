@@ -7,7 +7,12 @@
   "data_files": {
     "genes": "genes_data.json",
     "tree": "tree_data.json",
-    "cluster": "cluster_data.json"
+    "cluster": "cluster_data.json",
+    "reactions": "reactions_data.json",
+    "metabolic_maps": {
+      "full": { "file": "metabolic_map_full.json", "name": "Global Metabolism" },
+      "core": { "file": "metabolic_map_core.json", "name": "Core Metabolism" }
+    }
   },
   "fields": {
     "ID": 0, "FID": 1, "LENGTH": 2, "START": 3, "STRAND": 4,
