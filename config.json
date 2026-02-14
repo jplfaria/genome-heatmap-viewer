@@ -1,9 +1,9 @@
 {
   "title": "Genome Heatmap Viewer",
-  "organism": "Escherichia coli K-12 MG1655",
-  "genome_id": "562.61143",
-  "genome_assembly": "GCF_000005845.2",
-  "n_ref_genomes": 35,
+  "organism": "Acinetobacter baylyi ADP1",
+  "genome_id": "user_Acinetobacter_baylyi_ADP1_RAST",
+  "genome_assembly": "NC_005966.1",
+  "n_ref_genomes": 13,
   "data_files": {
     "genes": "genes_data.json",
     "tree": "tree_data.json",
