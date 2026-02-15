@@ -1513,24 +1513,76 @@
         searchMatches.clear();
         if (!query || query.length < 2) {
             info.style.display = 'none';
+            info.innerHTML = '';
             render();
             renderMinimap();
             return;
         }
         const q = query.toLowerCase();
+
+        // Enhanced search: ID, function, reactions
+        const matches = [];
         genes.forEach((g, i) => {
-            const fid = String(g[F.FID]).toLowerCase();
-            const func = (g[F.FUNC] || '').toLowerCase();
-            if (fid.includes(q) || func.includes(q)) {
+            const fid = String(g[CONFIG.fields.FID] || '').toLowerCase();
+            const func = (g[CONFIG.fields.FUNC] || '').toLowerCase();
+            const reactions = (g[CONFIG.fields.REACTIONS] || '').toLowerCase();
+
+            // Check if it's an exact ID match
+            const exactMatch = fid === q || fid.startsWith(q);
+
+            // Check other fields
+            const funcMatch = func.includes(q);
+            const reactionMatch = reactions.includes(q);
+
+            if (exactMatch || funcMatch || reactionMatch) {
                 searchMatches.add(i);
+                matches.push({
+                    idx: i,
+                    fid: g[CONFIG.fields.FID],
+                    func: g[CONFIG.fields.FUNC] || 'Unknown function',
+                    exact: exactMatch,
+                    score: exactMatch ? 100 : (funcMatch ? 50 : 25)
+                });
             }
         });
-        info.textContent = `${searchMatches.size} matches`;
-        info.style.display = 'block';
+
+        // Sort matches by score (exact matches first)
+        matches.sort((a, b) => b.score - a.score);
+
+        // Display search results
+        if (matches.length === 0) {
+            info.innerHTML = '<div style="color:#E07B39;">No matches found</div>';
+            info.style.display = 'block';
+        } else if (matches.length === 1) {
+            info.innerHTML = `<div>1 match: <strong>${matches[0].fid}</strong></div>`;
+            info.style.display = 'block';
+        } else if (matches.length <= 5) {
+            let html = `<div style="margin-bottom:4px;"><strong>${matches.length} matches:</strong></div>`;
+            for (const m of matches) {
+                const shortFunc = m.func.length > 40 ? m.func.substring(0, 40) + '...' : m.func;
+                html += `<div style="font-size:10px; padding:2px 0; cursor:pointer;" onclick="jumpToGene(${m.idx})">
+                    <span style="color:var(--kb-accent); font-weight:600;">${m.fid}</span>
+                    <span style="color:var(--kb-base); margin-left:4px;">${shortFunc}</span>
+                </div>`;
+            }
+            info.innerHTML = html;
+            info.style.display = 'block';
+        } else {
+            info.innerHTML = `<div><strong>${matches.length} matches</strong> (showing first 5)</div>`;
+            for (let i = 0; i < 5; i++) {
+                const m = matches[i];
+                const shortFunc = m.func.length > 40 ? m.func.substring(0, 40) + '...' : m.func;
+                info.innerHTML += `<div style="font-size:10px; padding:2px 0; cursor:pointer;" onclick="jumpToGene(${m.idx})">
+                    <span style="color:var(--kb-accent); font-weight:600;">${m.fid}</span>
+                    <span style="color:var(--kb-base); margin-left:4px;">${shortFunc}</span>
+                </div>`;
+            }
+            info.style.display = 'block';
+        }
 
         // Jump to first match
-        if (searchMatches.size > 0) {
-            const firstMatch = [...searchMatches][0];
+        if (matches.length > 0) {
+            const firstMatch = matches[0].idx;
             const posInSorted = sortedIndices.indexOf(firstMatch);
             if (posInSorted >= 0) {
                 const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
@@ -1539,6 +1591,17 @@
         }
         render();
         renderMinimap();
+    }
+
+    function jumpToGene(geneIdx) {
+        const posInSorted = sortedIndices.indexOf(geneIdx);
+        if (posInSorted >= 0) {
+            const visibleGenes = Math.max(100, Math.floor(genes.length / zoomLevel));
+            scrollPosition = Math.min(1, posInSorted / Math.max(1, genes.length - visibleGenes));
+            showGeneDetail(geneIdx);
+            render();
+            renderMinimap();
+        }
     }
 
     // === GENE DETAIL PANEL ===
