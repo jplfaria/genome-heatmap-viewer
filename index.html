@@ -527,6 +527,25 @@
         .reaction-table .rxn-id-col { font-weight: 600; color: var(--kb-accent); }
         .reaction-table .rxn-eq-col { max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         .reaction-table .rxn-genes-col { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+        /* Help/Glossary View */
+        .help-container { flex: 1; overflow-y: auto; background: var(--kb-base-lightest); padding: 24px; }
+        .help-content { max-width: 900px; margin: 0 auto; }
+        .help-section { background: var(--kb-white); border: 1px solid var(--kb-base-lighter); border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+        .help-section h2 { font-size: 20px; font-weight: 600; color: var(--kb-primary); margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--kb-primary-light); padding-bottom: 8px; }
+        .help-section h3 { font-size: 16px; font-weight: 600; color: var(--kb-base-darker); margin-top: 20px; margin-bottom: 12px; }
+        .help-section p { line-height: 1.6; color: var(--kb-base-dark); margin-bottom: 12px; }
+        .help-term { display: grid; grid-template-columns: 100px 1fr; gap: 12px; padding: 12px; margin-bottom: 8px; background: var(--kb-base-lightest); border-radius: 4px; align-items: start; }
+        .help-term-name { font-weight: 600; color: var(--kb-primary); font-family: monospace; font-size: 13px; }
+        .help-term-def { font-size: 13px; color: var(--kb-base-dark); line-height: 1.5; }
+        .help-term-def em { color: var(--kb-base); font-style: normal; display: block; margin-top: 4px; font-size: 12px; }
+        .help-color-demo { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+        .help-color-swatch { width: 20px; height: 20px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); }
+        .help-code { background: var(--kb-base-darker); color: var(--kb-white); padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 12px; }
+        .help-analysis-view { background: var(--kb-base-lightest); padding: 16px; border-left: 4px solid var(--kb-primary); margin-bottom: 16px; border-radius: 4px; }
+        .help-analysis-view h4 { font-size: 14px; font-weight: 600; color: var(--kb-primary); margin-top: 0; margin-bottom: 8px; }
+        .help-analysis-view .purpose { font-size: 13px; color: var(--kb-base-dark); margin-bottom: 8px; }
+        .help-analysis-view .tracks { font-size: 12px; color: var(--kb-base); }
+        .help-analysis-view .use-case { font-size: 12px; color: var(--kb-base-dark); background: white; padding: 8px; border-radius: 3px; margin-top: 8px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -540,6 +559,7 @@
         <button class="tab-btn" data-tab="tree" onclick="switchTab('tree')">Tree</button>
         <button class="tab-btn" data-tab="cluster" onclick="switchTab('cluster')">Cluster</button>
         <button class="tab-btn" data-tab="metabolic" onclick="switchTab('metabolic')">Metabolic Map</button>
+        <button class="tab-btn" data-tab="help" onclick="switchTab('help')" style="margin-left: auto;">Help</button>
     </div>
     <!-- Tab: Summary -->
     <div class="tab-content" id="tab-summary">
@@ -930,6 +950,328 @@
                             <tr><td colspan="8" style="text-align:center; padding:20px;">Loading...</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Help/Glossary -->
+    <div class="tab-content" id="tab-help">
+        <div class="help-container">
+            <div class="help-content">
+                <!-- Terminology -->
+                <div class="help-section">
+                    <h2>📚 Terminology & Abbreviations</h2>
+
+                    <h3>Annotation Sources</h3>
+                    <div class="help-term">
+                        <div class="help-term-name">EC</div>
+                        <div class="help-term-def">
+                            <strong>Enzyme Commission number</strong> — Hierarchical classification of enzyme function based on chemical reaction catalyzed.
+                            <em>Example: EC 1.1.1.1 = alcohol dehydrogenase</em>
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">KO</div>
+                        <div class="help-term-def">
+                            <strong>KEGG Orthology</strong> — Functional classification system from the KEGG database linking genes to pathways and modules.
+                            <em>Example: K00001 = alcohol dehydrogenase ortholog group</em>
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">COG</div>
+                        <div class="help-term-def">
+                            <strong>Clusters of Orthologous Groups</strong> — Protein families classified by evolutionary relationships and functional categories.
+                            <em>Example: COG1062 = zincin-like metalloproteases</em>
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">Pfam</div>
+                        <div class="help-term-def">
+                            <strong>Protein families database</strong> — Collection of protein domain alignments and hidden Markov models.
+                            <em>Example: PF00106 = short-chain dehydrogenase domain</em>
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">GO</div>
+                        <div class="help-term-def">
+                            <strong>Gene Ontology</strong> — Standardized vocabulary describing gene function (molecular function, biological process, cellular component).
+                            <em>Example: GO:0006096 = glycolytic process</em>
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">RAST</div>
+                        <div class="help-term-def">
+                            <strong>Rapid Annotation using Subsystem Technology</strong> — Automated annotation pipeline for bacterial and archaeal genomes.
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">Bakta</div>
+                        <div class="help-term-def">
+                            <strong>Bacterial annotation tool</strong> — Comprehensive annotation system combining multiple databases and prediction tools.
+                        </div>
+                    </div>
+
+                    <h3>Pangenome Terms</h3>
+                    <div class="help-term">
+                        <div class="help-term-name">Core</div>
+                        <div class="help-term-def">
+                            Genes present in >95% of reference genomes. Represent essential or highly conserved functions.
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">Accessory</div>
+                        <div class="help-term-def">
+                            Genes present in 5-95% of genomes. Provide strain-specific capabilities or niche adaptation.
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">Singleton</div>
+                        <div class="help-term-def">
+                            Genes present in <5% of genomes. Unique or rare genes, may indicate horizontal gene transfer.
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">Conservation</div>
+                        <div class="help-term-def">
+                            Fraction of reference genomes containing an ortholog of this gene (0.0 = unique, 1.0 = universal).
+                        </div>
+                    </div>
+
+                    <h3>Metabolic Terms</h3>
+                    <div class="help-term">
+                        <div class="help-term-name">Compartments</div>
+                        <div class="help-term-def">
+                            Cellular locations for reactions:
+                            <br><span class="help-code">c0</span> = Cytoplasm
+                            <br><span class="help-code">e0</span> = Extracellular
+                            <br><span class="help-code">p0</span> = Periplasm
+                            <br><span class="help-code">m0</span> = Mitochondria
+                            <br><span class="help-code">x0</span> = Peroxisome
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">FBA</div>
+                        <div class="help-term-def">
+                            <strong>Flux Balance Analysis</strong> — Mathematical modeling to predict metabolic flux through reactions under given growth conditions.
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">Gapfilling</div>
+                        <div class="help-term-def">
+                            Reactions added computationally to complete metabolic pathways when gene evidence is missing but function is inferred.
+                        </div>
+                    </div>
+
+                    <h3>Statistical Terms</h3>
+                    <div class="help-term">
+                        <div class="help-term-name">ANI</div>
+                        <div class="help-term-def">
+                            <strong>Average Nucleotide Identity</strong> — Genomic similarity metric (>95% ANI = same species).
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">Jaccard</div>
+                        <div class="help-term-def">
+                            Distance metric based on shared vs total gene clusters: <em>1 - (intersection / union)</em>
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">UPGMA</div>
+                        <div class="help-term-def">
+                            <strong>Unweighted Pair Group Method with Arithmetic Mean</strong> — Clustering algorithm used to build phylogenetic trees.
+                        </div>
+                    </div>
+                    <div class="help-term">
+                        <div class="help-term-name">UMAP</div>
+                        <div class="help-term-def">
+                            <strong>Uniform Manifold Approximation and Projection</strong> — Dimensionality reduction technique to visualize high-dimensional gene features in 2D.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consistency Scores -->
+                <div class="help-section">
+                    <h2>🎯 Understanding Consistency Scores</h2>
+                    <p><strong>What is consistency?</strong> Consistency measures how well annotations agree across genes in the same pangenome cluster (orthologs). A score of 1.0 (green) means all orthologs have the same annotation; 0.0 (red) means no agreement.</p>
+
+                    <h3>Formula</h3>
+                    <p>For each gene, we compare its annotation to all other genes in its pangenome cluster:</p>
+                    <p style="background: var(--kb-base-lightest); padding: 12px; border-left: 4px solid var(--kb-primary); font-family: monospace; font-size: 13px;">
+                        consistency = (# genes with matching annotation) / (total genes in cluster)
+                    </p>
+
+                    <h3>Color Scale</h3>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #E74C3C;"></div>
+                        <span><strong>0.0 = Red</strong> — No agreement (annotations inconsistent)</span>
+                    </div>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #F39C12;"></div>
+                        <span><strong>0.5 = Yellow</strong> — Partial agreement</span>
+                    </div>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #27AE60;"></div>
+                        <span><strong>1.0 = Green</strong> — Full agreement (high confidence)</span>
+                    </div>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #95A5A6;"></div>
+                        <span><strong>N/A = Gray</strong> — Gene not in cluster or no data</span>
+                    </div>
+
+                    <h3>Per-Source Consistency</h3>
+                    <p>We calculate consistency separately for each annotation source:</p>
+                    <ul>
+                        <li><strong>RAST Consistency</strong> — Agreement of RAST function annotations</li>
+                        <li><strong>KO Consistency</strong> — Agreement of KEGG Orthology assignments</li>
+                        <li><strong>GO Consistency</strong> — Agreement of Gene Ontology terms</li>
+                        <li><strong>EC Consistency</strong> — Agreement of EC numbers</li>
+                        <li><strong>Bakta Consistency</strong> — Agreement of Bakta annotations</li>
+                        <li><strong>Average Consistency</strong> — Mean of all source-specific scores</li>
+                    </ul>
+
+                    <h3>Interpretation</h3>
+                    <p>
+                        <strong>High consistency (green)</strong> = Annotation is reliable across orthologs<br>
+                        <strong>Low consistency (red)</strong> = Conflicting annotations, may need manual review<br>
+                        <strong>Disagreement between sources</strong> = One annotation method may be more reliable than another
+                    </p>
+                </div>
+
+                <!-- Analysis Views -->
+                <div class="help-section">
+                    <h2>🔬 Analysis View Guide</h2>
+                    <p>Analysis views are pre-configured combinations of tracks designed for specific scientific questions. Each view selects and sorts tracks to highlight relevant patterns.</p>
+
+                    <div class="help-analysis-view">
+                        <h4>1. Characterization Targets</h4>
+                        <div class="purpose"><strong>Purpose:</strong> Identify conserved genes with unknown function that are priority targets for experimental characterization.</div>
+                        <div class="tracks"><strong>Tracks:</strong> Hypothetical Protein, Core/Accessory, Pangenome Conservation, Avg Consistency</div>
+                        <div class="use-case"><strong>Example:</strong> "Find core genes (>95% conservation) that are annotated as hypothetical with low consistency scores. These are high-value characterization targets because they're essential but poorly understood."</div>
+                    </div>
+
+                    <div class="help-analysis-view">
+                        <h4>2. Annotation Quality</h4>
+                        <div class="purpose"><strong>Purpose:</strong> Identify annotation conflicts and quality issues across multiple annotation sources.</div>
+                        <div class="tracks"><strong>Tracks:</strong> RAST/Bakta Agreement, Avg Consistency, Annotation Specificity, Hypothetical Protein</div>
+                        <div class="use-case"><strong>Example:</strong> "Genes where RAST says 'hypothetical' but Bakta assigns a function (Disagree status) with low consistency may have unreliable annotations. Prioritize manual curation."</div>
+                    </div>
+
+                    <div class="help-analysis-view">
+                        <h4>3. Metabolic Landscape</h4>
+                        <div class="purpose"><strong>Purpose:</strong> Assess metabolic annotation coverage and enzymatic function assignment.</div>
+                        <div class="tracks"><strong>Tracks:</strong> # EC Numbers, KEGG Module Hits, EC Consistency, EC Mapped Consistency</div>
+                        <div class="use-case"><strong>Example:</strong> "Genes with many EC numbers but low EC consistency may represent multi-functional enzymes or promiscuous annotations. Cross-reference with Metabolic Map tab."</div>
+                    </div>
+
+                    <div class="help-analysis-view">
+                        <h4>4. Pangenome Structure</h4>
+                        <div class="purpose"><strong>Purpose:</strong> Explore overall pangenome architecture and gene family distributions.</div>
+                        <div class="tracks"><strong>Tracks:</strong> Pangenome Conservation, Core/Accessory, Cluster Size, Gene Direction</div>
+                        <div class="use-case"><strong>Example:</strong> "Large cluster size + high conservation = ancient gene family present across many genomes. Small cluster + low conservation = recent horizontal gene transfer or lineage-specific gene."</div>
+                    </div>
+
+                    <div class="help-analysis-view">
+                        <h4>5. Knowledge Coverage</h4>
+                        <div class="purpose"><strong>Purpose:</strong> Measure annotation depth — how well-characterized is each gene across all databases?</div>
+                        <div class="tracks"><strong>Tracks:</strong> Has Gene Name, # KEGG Terms, # GO Terms, # Pfam Terms, # EC Numbers</div>
+                        <div class="use-case"><strong>Example:</strong> "Genes with 0 across all annotation sources are completely unknown. Genes with high counts in multiple sources are well-studied and have reliable functional predictions."</div>
+                    </div>
+
+                    <div class="help-analysis-view">
+                        <h4>6. Consistency Comparison</h4>
+                        <div class="purpose"><strong>Purpose:</strong> Compare consistency across annotation methods to identify which sources are most reliable.</div>
+                        <div class="tracks"><strong>Tracks:</strong> RAST Consistency, KO Consistency, Bakta Consistency, EC Consistency, GO Consistency</div>
+                        <div class="use-case"><strong>Example:</strong> "A gene with high RAST consistency (green) but low KO consistency (red) suggests RAST annotation is more stable across orthologs. Use the more consistent source for functional inference."</div>
+                    </div>
+                </div>
+
+                <!-- Common Workflows -->
+                <div class="help-section">
+                    <h2>🚀 Common Workflows</h2>
+
+                    <h3>Finding Genes for Experimental Validation</h3>
+                    <ol>
+                        <li>Switch to <strong>Characterization Targets</strong> analysis view</li>
+                        <li>Look for genes with: Core status + Hypothetical protein + High conservation</li>
+                        <li>Click gene to see details and check if it has ANY functional annotations</li>
+                        <li>Export gene list for lab prioritization</li>
+                    </ol>
+
+                    <h3>Investigating Metabolic Capabilities</h3>
+                    <ol>
+                        <li>Switch to <strong>Metabolic Map</strong> tab</li>
+                        <li>Color by "Pangenome Conservation" to see which pathways are core vs strain-specific</li>
+                        <li>Click reactions to see linked genes</li>
+                        <li>Use <strong>Reaction Table</strong> to filter by flux class (e.g., "essential_forward")</li>
+                        <li>Cross-reference with Tracks tab using <strong>Metabolic Landscape</strong> view</li>
+                    </ol>
+
+                    <h3>Comparing Annotation Methods</h3>
+                    <ol>
+                        <li>Switch to <strong>Annotation Quality</strong> view</li>
+                        <li>Sort by "Lowest Consistency" to see most problematic annotations</li>
+                        <li>Check "RAST/Bakta Agreement" track for conflicts</li>
+                        <li>Use <strong>Consistency Comparison</strong> view to see which source is most reliable</li>
+                        <li>Manually review genes with Disagree status and low consistency</li>
+                    </ol>
+
+                    <h3>Understanding Pangenome Evolution</h3>
+                    <ol>
+                        <li>Go to <strong>Tree</strong> tab to see phylogenetic relationships</li>
+                        <li>Check stat bars for gene count and core % per genome</li>
+                        <li>Go to <strong>Cluster</strong> tab to visualize gene similarity landscape</li>
+                        <li>Color by Pangenome Status to see core vs accessory distribution</li>
+                        <li>Use <strong>Pangenome Structure</strong> view on Tracks tab for detailed exploration</li>
+                    </ol>
+                </div>
+
+                <!-- Color Schemes -->
+                <div class="help-section">
+                    <h2>🎨 Color Scheme Reference</h2>
+
+                    <h3>Sequential (More = Better)</h3>
+                    <p>Used for counts and conservation scores:</p>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #D3D3D3;"></div>
+                        <div class="help-color-swatch" style="background: #A8D5A8;"></div>
+                        <div class="help-color-swatch" style="background: #7FBF7F;"></div>
+                        <div class="help-color-swatch" style="background: #27AE60;"></div>
+                        <span>Low → High (gray to dark green)</span>
+                    </div>
+
+                    <h3>Quality Scale (Red → Green)</h3>
+                    <p>Used for consistency and quality metrics:</p>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #E74C3C;"></div>
+                        <div class="help-color-swatch" style="background: #F39C12;"></div>
+                        <div class="help-color-swatch" style="background: #F4D03F;"></div>
+                        <div class="help-color-swatch" style="background: #27AE60;"></div>
+                        <span>Poor (0.0) → Excellent (1.0)</span>
+                    </div>
+
+                    <h3>Categorical (Pangenome Status)</h3>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #4F8EB8;"></div>
+                        <span><strong>Blue</strong> = Core (>95% genomes)</span>
+                    </div>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #8E44AD;"></div>
+                        <span><strong>Purple</strong> = Accessory (5-95% genomes)</span>
+                    </div>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #95A5A6;"></div>
+                        <span><strong>Gray</strong> = Singleton (<5% genomes) or Unknown</span>
+                    </div>
+
+                    <h3>Diverging (Flux)</h3>
+                    <p>Used for reaction flux (negative = reverse, positive = forward):</p>
+                    <div class="help-color-demo">
+                        <div class="help-color-swatch" style="background: #3498DB;"></div>
+                        <div class="help-color-swatch" style="background: #ECF0F1;"></div>
+                        <div class="help-color-swatch" style="background: #E74C3C;"></div>
+                        <span>Reverse (blue) ← Zero (white) → Forward (red)</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3413,7 +3755,9 @@
     }
 
     function showReactionDetail(rxnId) {
-        const rxn = reactionsData && reactionsData.reactions[rxnId];
+        // Strip compartment suffix to match our data format
+        const baseId = rxnId.replace(/_[cepxm]\d+$/, '');
+        const rxn = reactionsData && reactionsData.reactions[baseId];
         const el = document.getElementById('metabolic-rxn-detail');
         if (!rxn) {
             el.innerHTML = `
