@@ -524,7 +524,8 @@
         .reaction-table th:hover { background: var(--kb-base-light); }
         .reaction-table td { padding: 6px 8px; border-bottom: 1px solid var(--kb-base-lightest); }
         .reaction-table tr:hover { background: var(--kb-base-lightest); }
-        .reaction-table .rxn-id-col { font-weight: 600; color: var(--kb-accent); }
+        .reaction-table .rxn-id-col { font-weight: 600; color: var(--kb-accent); cursor: help; }
+        .reaction-table .rxn-id-col:hover { text-decoration: underline; }
         .reaction-table .rxn-eq-col { max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         .reaction-table .rxn-genes-col { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         /* Help/Glossary View */
@@ -3501,7 +3502,8 @@
         for (const rxn of toShow) {
             const hasGenes = rxn.genes && rxn.genes.trim() !== '';
             const label = hasGenes ? `(${rxn.genes.split(/\s+or\s+|\s+and\s+/).length} genes)` : '(no genes)';
-            html += `<div style="margin-bottom:2px;"><span style="color:var(--kb-accent)">${rxn.id}</span> <span style="color:#9D9389; font-size:9px;">${label}</span></div>`;
+            const eq = rxn.equation || 'No equation available';
+            html += `<div style="margin-bottom:2px;"><span style="color:var(--kb-accent); cursor:help;" title="${eq}">${rxn.id}</span> <span style="color:#9D9389; font-size:9px;">${label}</span></div>`;
         }
 
         if (!showAll) {
@@ -3678,7 +3680,7 @@
                 const classM = rxn.class_min || '-';
 
                 html += `<tr>
-                    <td class="rxn-id-col">${rxn.id}</td>
+                    <td class="rxn-id-col" title="${eq}">${rxn.id}</td>
                     <td class="rxn-eq-col" title="${eq}">${eq}</td>
                     <td class="rxn-genes-col" title="${genes}">${genes}</td>
                     <td>${cons}</td>
