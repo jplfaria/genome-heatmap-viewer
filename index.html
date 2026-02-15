@@ -515,9 +515,10 @@
         .rxn-gene-link:hover { color: var(--kb-primary-dark); }
         .metabolic-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--kb-base-light); font-size: 14px; }
         /* Reaction Table */
-        .reaction-table-container { flex: 1; overflow: auto; background: var(--kb-white); display: none; }
-        .reaction-table-toolbar { padding: 8px 12px; background: var(--kb-base-lightest); border-bottom: 1px solid var(--kb-base-lighter); display: flex; gap: 12px; align-items: center; font-size: 11px; }
-        .reaction-table-toolbar select { padding: 4px 8px; border: 1px solid var(--kb-base-lighter); border-radius: 4px; font-size: 11px; }
+        .reaction-table-container { flex: 1; overflow: auto; background: var(--kb-white); display: none; flex-direction: column; }
+        .reaction-table-toolbar { padding: 12px; background: var(--kb-base-lightest); border-bottom: 1px solid var(--kb-base-lighter); display: flex; gap: 16px; align-items: center; font-size: 12px; flex-wrap: wrap; }
+        .reaction-table-toolbar select { padding: 6px 10px; border: 1px solid var(--kb-base-lighter); border-radius: 4px; font-size: 12px; background: white; }
+        .reaction-table-toolbar span { font-weight: 500; }
         .reaction-table { width: 100%; border-collapse: collapse; font-size: 11px; }
         .reaction-table th { background: var(--kb-base-lightest); padding: 8px; text-align: left; border-bottom: 2px solid var(--kb-base-lighter); position: sticky; top: 0; cursor: pointer; user-select: none; }
         .reaction-table th:hover { background: var(--kb-base-light); }
@@ -805,6 +806,18 @@
         <div class="sidebar">
             <div class="sidebar-header">Metabolic Map</div>
             <div class="sidebar-section">
+                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                    <span>Actions</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div class="action-item" onclick="exportReactions()" style="padding: 8px 12px; cursor: pointer;">
+                    <span class="icon">&#8595;</span> Export reactions (CSV)
+                </div>
+                <div class="action-item" onclick="toggleReactionTable()" style="padding: 8px 12px; cursor: pointer;">
+                    <span class="icon" id="table-toggle-icon">&#9776;</span> <span id="table-toggle-text">Show reaction table</span>
+                </div>
+            </div>
+            <div class="sidebar-section">
                 <div class="sidebar-section-title">
                     <span>Map</span>
                     <span class="toggle-icon">&#9660;</span>
@@ -850,18 +863,6 @@
             </div>
             <div class="sidebar-section">
                 <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
-                    <span>Actions</span>
-                    <span class="toggle-icon">&#9660;</span>
-                </div>
-                <div class="action-item" onclick="exportReactions()" style="padding: 8px 12px; cursor: pointer;">
-                    <span class="icon">&#8595;</span> Export reactions (CSV)
-                </div>
-                <div class="action-item" onclick="toggleReactionTable()" style="padding: 8px 12px; cursor: pointer;">
-                    <span class="icon" id="table-toggle-icon">&#9776;</span> <span id="table-toggle-text">Show reaction table</span>
-                </div>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
                     <span>Unmapped Reactions</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -888,23 +889,28 @@
             </div>
             <div class="reaction-table-container" id="reaction-table-container">
                 <div class="reaction-table-toolbar">
-                    <span>Filter:</span>
-                    <select id="rxn-table-filter" onchange="filterReactionTable()">
-                        <option value="all">All reactions</option>
-                        <option value="on_map">On map</option>
-                        <option value="not_on_map">Not on map</option>
-                        <option value="has_genes">With genes</option>
-                        <option value="no_genes">No genes</option>
-                        <option value="exchange">Exchange</option>
-                    </select>
-                    <span>Sort:</span>
-                    <select id="rxn-table-sort" onchange="sortReactionTable()">
-                        <option value="id">Reaction ID</option>
-                        <option value="conservation">Conservation</option>
-                        <option value="flux_rich">Flux (rich)</option>
-                        <option value="flux_min">Flux (minimal)</option>
-                    </select>
-                    <span id="rxn-table-count" style="margin-left: auto;"></span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span>Filter:</span>
+                        <select id="rxn-table-filter" onchange="filterReactionTable()">
+                            <option value="metabolic" selected>Metabolic (no exchange/sink)</option>
+                            <option value="all">All reactions</option>
+                            <option value="on_map">On map</option>
+                            <option value="not_on_map">Not on map</option>
+                            <option value="has_genes">With genes</option>
+                            <option value="no_genes">No genes</option>
+                            <option value="exchange">Exchange/Sink only</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span>Sort:</span>
+                        <select id="rxn-table-sort" onchange="sortReactionTable()">
+                            <option value="id">Reaction ID</option>
+                            <option value="conservation">Conservation</option>
+                            <option value="flux_rich">Flux (rich)</option>
+                            <option value="flux_min">Flux (minimal)</option>
+                        </select>
+                    </div>
+                    <span id="rxn-table-count" style="margin-left: auto; font-weight: 600; color: var(--kb-primary);"></span>
                 </div>
                 <div style="overflow: auto; flex: 1;">
                     <table class="reaction-table" id="reaction-table">
@@ -2502,7 +2508,11 @@
             const tax = meta.tax || {};
             const shortId = gid.replace('RS_GCF_', 'GCF_').replace(/\.1$/, '');
             const displayName = tax.species || shortId;
-            const label = isUser ? `${gid} (YOUR GENOME)` : displayName;
+            // Truncate user genome label to fit better
+            let label = isUser ? `${displayName} (YOUR GENOME)` : displayName;
+            if (isUser && label.length > 35) {
+                label = label.substring(0, 32) + '...';
+            }
             const textColor = isUser ? '#dc2626' : '#374151';
             const fontWeight = isUser ? '700' : '400';
             const fontSize = isUser ? '12' : '11';
@@ -3132,7 +3142,7 @@
         const showAll = unmapped.length <= maxShow;
         const toShow = showAll ? unmapped : unmapped.slice(0, maxShow);
 
-        let html = `<div style="margin-bottom:6px; font-weight:600;">${unmapped.length} reactions not visualized (excluding exchange/sink):</div>`;
+        let html = `<div style="margin-bottom:6px; font-weight:600;">${unmapped.length} metabolic reactions not on map:</div>`;
         html += '<div style="font-family: monospace; line-height: 1.6;">';
 
         for (const rxn of toShow) {
@@ -3174,7 +3184,7 @@
         unmapped.sort((a, b) => a.id.localeCompare(b.id));
 
         const el = document.getElementById('metabolic-unmapped');
-        let html = `<div style="margin-bottom:6px; font-weight:600;">${unmapped.length} reactions not visualized (excluding exchange/sink):</div>`;
+        let html = `<div style="margin-bottom:6px; font-weight:600;">${unmapped.length} metabolic reactions not on map:</div>`;
         html += '<div style="font-family: monospace; line-height: 1.6;">';
 
         for (const rxn of unmapped) {
@@ -3270,11 +3280,12 @@
         for (const [rxnId, rxn] of Object.entries(reactionsData.reactions)) {
             let include = false;
             const hasGenes = rxn.genes && rxn.genes.trim() !== '';
-            const isExchange = rxnId.startsWith('EX_');
+            const isExchange = rxnId.startsWith('EX_') || rxnId.startsWith('SK_');
             const isOnMap = onMapSet.has(rxnId);
 
             switch (filter) {
                 case 'all': include = true; break;
+                case 'metabolic': include = !isExchange; break;
                 case 'on_map': include = isOnMap; break;
                 case 'not_on_map': include = !isOnMap; break;
                 case 'has_genes': include = hasGenes; break;
