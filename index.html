@@ -1094,7 +1094,7 @@
                 <!-- Consistency Scores -->
                 <div class="help-section">
                     <h2>🎯 Understanding Consistency Scores</h2>
-                    <p><strong>What is consistency?</strong> Consistency measures how well annotations agree across genes in the same pangenome cluster (orthologs). A score of 1.0 (green) means all orthologs have the same annotation; 0.0 (red) means no agreement.</p>
+                    <p><strong>What is consistency?</strong> Consistency measures how well annotations agree across genes in the same pangenome cluster (orthologs). A score of 1.0 (orange) means all orthologs have the same annotation; 0.0 (blue) means no agreement.</p>
 
                     <h3>Formula</h3>
                     <p>For each gene, we compare its annotation to all other genes in its pangenome cluster:</p>
@@ -1104,21 +1104,22 @@
 
                     <h3>Color Scale</h3>
                     <div class="help-color-demo">
-                        <div class="help-color-swatch" style="background: #E74C3C;"></div>
-                        <span><strong>0.0 = Red</strong> — No agreement (annotations inconsistent)</span>
+                        <div class="help-color-swatch" style="background: #2563eb;"></div>
+                        <span><strong>0.0 = Blue</strong> — No agreement (annotations inconsistent)</span>
                     </div>
                     <div class="help-color-demo">
-                        <div class="help-color-swatch" style="background: #F39C12;"></div>
-                        <span><strong>0.5 = Yellow</strong> — Partial agreement</span>
+                        <div class="help-color-swatch" style="background: #ffffff; border: 1px solid #ccc;"></div>
+                        <span><strong>0.5 = White</strong> — Partial agreement</span>
                     </div>
                     <div class="help-color-demo">
-                        <div class="help-color-swatch" style="background: #27AE60;"></div>
-                        <span><strong>1.0 = Green</strong> — Full agreement (high confidence)</span>
+                        <div class="help-color-swatch" style="background: #f97316;"></div>
+                        <span><strong>1.0 = Orange</strong> — Full agreement (high confidence)</span>
                     </div>
                     <div class="help-color-demo">
                         <div class="help-color-swatch" style="background: #95A5A6;"></div>
                         <span><strong>N/A = Gray</strong> — Gene not in cluster or no data</span>
                     </div>
+                    <p style="font-size: 12px; color: var(--kb-base); margin-top: 12px;"><strong>Note:</strong> This color scheme is designed to be accessible for colorblind users, avoiding red-green confusion.</p>
 
                     <h3>Per-Source Consistency</h3>
                     <p>We calculate consistency separately for each annotation source:</p>
@@ -1183,7 +1184,7 @@
                         <h4>6. Consistency Comparison</h4>
                         <div class="purpose"><strong>Purpose:</strong> Compare consistency across annotation methods to identify which sources are most reliable.</div>
                         <div class="tracks"><strong>Tracks:</strong> RAST Consistency, KO Consistency, Bakta Consistency, EC Consistency, GO Consistency</div>
-                        <div class="use-case"><strong>Example:</strong> "A gene with high RAST consistency (green) but low KO consistency (red) suggests RAST annotation is more stable across orthologs. Use the more consistent source for functional inference."</div>
+                        <div class="use-case"><strong>Example:</strong> "A gene with high RAST consistency (orange) but low KO consistency (blue) suggests RAST annotation is more stable across orthologs. Use the more consistent source for functional inference."</div>
                     </div>
                 </div>
 
@@ -1241,13 +1242,13 @@
                         <span>Low → High (gray to dark green)</span>
                     </div>
 
-                    <h3>Quality Scale (Red → Green)</h3>
-                    <p>Used for consistency and quality metrics:</p>
+                    <h3>Quality Scale (Blue → Orange)</h3>
+                    <p>Used for consistency and quality metrics (colorblind-safe):</p>
                     <div class="help-color-demo">
-                        <div class="help-color-swatch" style="background: #E74C3C;"></div>
-                        <div class="help-color-swatch" style="background: #F39C12;"></div>
-                        <div class="help-color-swatch" style="background: #F4D03F;"></div>
-                        <div class="help-color-swatch" style="background: #27AE60;"></div>
+                        <div class="help-color-swatch" style="background: #2563eb;"></div>
+                        <div class="help-color-swatch" style="background: #7fa3f5;"></div>
+                        <div class="help-color-swatch" style="background: #ffd7b3;"></div>
+                        <div class="help-color-swatch" style="background: #f97316;"></div>
                         <span>Poor (0.0) → Excellent (1.0)</span>
                     </div>
 
@@ -1332,13 +1333,13 @@
           desc: '<strong>Average Function Consistency Score</strong>' +
             '<span class="tt-label">What it shows:</span>How well this gene\'s functional annotation agrees with other genes in the same pangenome cluster, averaged across all annotation sources (RAST, KO, GO, EC, Bakta).' +
             '<span class="tt-label">How it\'s computed:</span>For each annotation source, the pipeline compares this gene\'s annotation to all other genes in the same cluster. If all genes share the same annotation, consistency = 1.0. If this gene has a unique annotation, consistency approaches 0. The average is taken across all available sources.' +
-            '<div class="tt-colors"><span class="tt-swatch" style="background:#22c55e"></span> 1.0 = all genes in cluster agree &nbsp; <span class="tt-swatch" style="background:#f59e0b"></span> 0.5 = mixed &nbsp; <span class="tt-swatch" style="background:#ef4444"></span> 0.0 = disagree &nbsp; <span class="tt-swatch" style="background:#e5e7eb"></span> N/A = no cluster</div>' +
-            '<span class="tt-label">Biological insight:</span>Low consistency (red) genes are especially interesting: they may have novel functions, incorrect annotations, or represent recently diverged genes.' },
+            '<div class="tt-colors"><span class="tt-swatch" style="background:#f97316"></span> 1.0 = all genes in cluster agree &nbsp; <span class="tt-swatch" style="background:#ffffff; border:1px solid #ccc;"></span> 0.5 = mixed &nbsp; <span class="tt-swatch" style="background:#2563eb"></span> 0.0 = disagree &nbsp; <span class="tt-swatch" style="background:#e5e7eb"></span> N/A = no cluster</div>' +
+            '<span class="tt-label">Biological insight:</span>Low consistency (blue) genes are especially interesting: they may have novel functions, incorrect annotations, or represent recently diverged genes.' },
         { id: 'rast_cons', name: 'RAST Consistency', field: F.RAST_CONS, type: 'consistency', enabled: false,
           desc: '<strong>RAST Function Consistency</strong>' +
             '<span class="tt-label">What it shows:</span>Whether this gene\'s RAST function annotation matches the RAST annotations of other genes in the same pangenome cluster.' +
             '<span class="tt-label">About RAST:</span>RAST (Rapid Annotation using Subsystem Technology) assigns functional roles based on sequence similarity to the SEED database. It provides human-readable function names (e.g., "Alcohol dehydrogenase").' +
-            '<span class="tt-label">How to interpret:</span>Green (1.0) = all cluster members share the same RAST function. Red (0.0) = this gene has a RAST function that no other cluster member shares. Gray = gene has no pangenome cluster assignment.' +
+            '<span class="tt-label">How to interpret:</span>Orange (1.0) = all cluster members share the same RAST function. Blue (0.0) = this gene has a RAST function that no other cluster member shares. Gray = gene has no pangenome cluster assignment.' +
             '<span class="tt-label">Tip:</span>Compare with Bakta consistency. If both are low, the gene may be genuinely ambiguous. If RAST is low but Bakta is high, annotation sources disagree.' },
         { id: 'ko_cons', name: 'KO Consistency', field: F.KO_CONS, type: 'consistency', enabled: false,
           desc: '<strong>KEGG Orthology Consistency</strong>' +
@@ -1356,13 +1357,13 @@
           desc: '<strong>EC Number Consistency</strong>' +
             '<span class="tt-label">What it shows:</span>Whether this gene\'s Enzyme Commission (EC) number matches EC numbers of other genes in the same pangenome cluster.' +
             '<span class="tt-label">About EC:</span>EC numbers classify enzymes by the reaction they catalyze (e.g., EC 1.1.1.1 = alcohol dehydrogenase). Only enzyme-coding genes receive EC numbers, so non-enzymatic genes will be gray.' +
-            '<span class="tt-label">How to interpret:</span>Green = enzymatic function is consistent across the cluster. Red = this gene\'s enzyme classification differs from cluster members. Gray = no EC number assigned or no pangenome cluster.' +
+            '<span class="tt-label">How to interpret:</span>Orange = enzymatic function is consistent across the cluster. Blue = this gene\'s enzyme classification differs from cluster members. Gray = no EC number assigned or no pangenome cluster.' +
             '<span class="tt-label">Correlation:</span>EC consistency should closely correlate with Bakta consistency for enzyme-coding genes, since both ultimately reflect enzymatic function.' },
         { id: 'bakta_cons', name: 'Bakta Consistency', field: F.BAKTA_CONS, type: 'consistency', enabled: false,
           desc: '<strong>Bakta Function Consistency</strong>' +
             '<span class="tt-label">What it shows:</span>Whether this gene\'s Bakta annotation matches Bakta annotations of other genes in the same pangenome cluster.' +
             '<span class="tt-label">About Bakta:</span>Bakta is a modern genome annotation tool that integrates multiple databases (UniProt, Pfam, COG, etc.) to produce standardized, high-quality annotations. It provides more consistent naming than RAST.' +
-            '<span class="tt-label">How to interpret:</span>Green = Bakta annotation is consistent across cluster. Red = Bakta disagrees with other members. Gray = no cluster assignment.' +
+            '<span class="tt-label">How to interpret:</span>Orange = Bakta annotation is consistent across cluster. Blue = Bakta disagrees with other members. Gray = no cluster assignment.' +
             '<span class="tt-label">Tip:</span>Bakta consistency is a strong signal. When both RAST and Bakta are low, the gene likely has a genuinely unusual function for its cluster.' },
         { id: 'specificity', name: 'Annotation Specificity', field: F.SPECIFICITY, type: 'consistency', enabled: false,
           desc: '<strong>Annotation Specificity</strong>' +
@@ -1531,11 +1532,23 @@
             return colors[v % colors.length];
         },
         consistency: (v) => {
-            if (v < 0) return '#e5e7eb';
+            if (v < 0) return '#e5e7eb';  // Gray for N/A
+            // Colorblind-safe: Blue (poor) → White (mid) → Orange (good)
+            // This avoids red-green confusion
             if (v < 0.5) {
-                return `rgb(239, ${Math.floor(68 + 180 * (v * 2))}, 68)`;
+                // 0 to 0.5: Dark blue (#2563eb) to white (#ffffff)
+                const t = v * 2;  // normalize to 0-1
+                const r = Math.floor(37 + (255 - 37) * t);
+                const g = Math.floor(99 + (255 - 99) * t);
+                const b = Math.floor(235 + (255 - 235) * t);
+                return `rgb(${r}, ${g}, ${b})`;
             } else {
-                return `rgb(${Math.floor(239 - 205 * ((v - 0.5) * 2))}, ${Math.floor(248 - 52 * ((v - 0.5) * 2))}, 68)`;
+                // 0.5 to 1.0: White (#ffffff) to orange (#f97316)
+                const t = (v - 0.5) * 2;  // normalize to 0-1
+                const r = Math.floor(255 - (255 - 249) * t);
+                const g = Math.floor(255 - (255 - 115) * t);
+                const b = Math.floor(255 - (255 - 22) * t);
+                return `rgb(${r}, ${g}, ${b})`;
             }
         },
         placeholder: () => '#F2EFEB'
@@ -1731,7 +1744,7 @@
           summary: 'Spot annotation conflicts and gaps',
           desc: '<strong>Annotation Quality Assessment</strong>' +
             '<span class="tt-label">Purpose:</span>Evaluate the reliability of functional annotations. Spots genes where annotation tools disagree, consistency is low, or specificity is poor.' +
-            '<span class="tt-label">What to look for:</span>Genes sorted by lowest consistency first. Red cells = potential annotation problems. Look for patterns: do certain function types consistently show disagreement?' +
+            '<span class="tt-label">What to look for:</span>Genes sorted by lowest consistency first. Blue cells = potential annotation problems. Look for patterns: do certain function types consistently show disagreement?' +
             '<span class="tt-label">Tracks shown:</span>RAST/Bakta Agreement + Avg Consistency + Specificity + Hypothetical Flag' +
             '<span class="tt-label">Agreement colors:</span>Green = both agree on function, Purple = both say hypothetical, Orange = one hypothetical/one function, Red = disagree on function' +
             '<span class="tt-label">Example use case:</span>Genes with "Disagree" status and low consistency may have unreliable annotations. Prioritize these for manual curation or re-annotation.' },
@@ -1771,10 +1784,10 @@
           summary: 'Compare consistency across annotation sources',
           desc: '<strong>Consistency Source Comparison</strong>' +
             '<span class="tt-label">Purpose:</span>Compare how each annotation source (RAST, KO, Bakta, EC, GO) rates gene consistency within pangenome clusters. Sources may disagree on the same gene.' +
-            '<span class="tt-label">What to look for:</span>Genes where one source is green but another is red. GO consistency tends to be higher (broader terms). EC consistency has more gray (many genes lack EC). RAST and Bakta should loosely agree but use different naming.' +
+            '<span class="tt-label">What to look for:</span>Genes where one source is orange but another is blue. GO consistency tends to be higher (broader terms). EC consistency has more gray (many genes lack EC). RAST and Bakta should loosely agree but use different naming.' +
             '<span class="tt-label">Tracks shown:</span>RAST + KO + Bakta + EC + GO Consistency' +
-            '<span class="tt-label">Consistency formula:</span>For each gene, compare its annotation to orthologs in same pangenome cluster. 1.0 (green) = all agree, 0.0 (red) = no agreement, N/A (gray) = no cluster or no data.' +
-            '<span class="tt-label">Example use case:</span>A gene with high RAST consistency (green) but low KO consistency (red) suggests RAST annotation is more stable across orthologs. Use the more consistent source for functional inference.' },
+            '<span class="tt-label">Consistency formula:</span>For each gene, compare its annotation to orthologs in same pangenome cluster. 1.0 (orange) = all agree, 0.0 (blue) = no agreement, N/A (gray) = no cluster or no data.' +
+            '<span class="tt-label">Example use case:</span>A gene with high RAST consistency (orange) but low KO consistency (blue) suggests RAST annotation is more stable across orthologs. Use the more consistent source for functional inference.' },
     ];
 
     let activeView = null;
@@ -2584,10 +2597,10 @@
         },
         consistency: {
             html: '<span class="legend-label">Consistency:</span><span>0</span>' +
-                '<div class="legend-color" style="background: linear-gradient(to right, #ef4444, #fbbf24, #22c55e); width: 50px;"></div>' +
+                '<div class="legend-color" style="background: linear-gradient(to right, #2563eb, #ffffff, #f97316); width: 50px;"></div>' +
                 '<span>1</span>' +
                 '<div class="legend-color" style="background: #e5e7eb;"></div><span>N/A</span>',
-            tip: 'Red (0) = this gene\'s annotation disagrees with other genes in its pangenome cluster. Yellow (0.5) = partial agreement. Green (1.0) = full agreement. Gray = no pangenome cluster assigned or no annotation for this source.'
+            tip: 'Blue (0) = this gene\'s annotation disagrees with other genes in its pangenome cluster. White (0.5) = partial agreement. Orange (1.0) = full agreement. Gray = no pangenome cluster assigned or no annotation for this source. Colorblind-safe palette.'
         },
         binary: {
             html: '',
