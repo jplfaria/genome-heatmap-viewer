@@ -1447,18 +1447,46 @@
           desc: '<strong>Neighborhood Conservation* (Pending)</strong>' +
             '<span class="tt-label">Planned feature:</span>Will show how conserved the genomic neighborhood (surrounding genes) is across the pangenome. High values mean the gene cluster arrangement is preserved across species.' +
             '<span class="tt-label">Status:</span>Awaiting BERDL pipeline update to compute neighborhood conservation scores.' },
-        { id: 'flux_minimal', name: 'Flux (minimal media)*', field: -1, type: 'placeholder', enabled: false,
-          desc: '<strong>Metabolic Flux - Minimal Media* (Pending)</strong>' +
-            '<span class="tt-label">Planned feature:</span>Will show the predicted metabolic flux through each gene\'s reaction(s) in pyruvate minimal media conditions using Flux Balance Analysis (FBA) with a genome-scale metabolic model.' +
-            '<span class="tt-label">Status:</span>Requires FBA results from ModelSEED/KBase.' },
-        { id: 'rxn_class_min', name: 'Rxn Class (minimal)*', field: -1, type: 'placeholder', enabled: false,
-          desc: '<strong>Reaction Classification - Minimal Media* (Pending)</strong>' +
-            '<span class="tt-label">Planned feature:</span>FVA (Flux Variability Analysis) reaction classification in minimal media. Categories: Essential (always carries flux), Active (carries flux in optimal), Inactive (blocked), Variable.' +
-            '<span class="tt-label">Status:</span>Requires FVA results from metabolic modeling.' },
-        { id: 'rxn_class_rich', name: 'Rxn Class (rich)*', field: -1, type: 'placeholder', enabled: false,
-          desc: '<strong>Reaction Classification - Rich Media* (Pending)</strong>' +
-            '<span class="tt-label">Planned feature:</span>Same as minimal media reaction classification but under rich media conditions. Comparing minimal vs. rich reveals condition-dependent essential genes.' +
-            '<span class="tt-label">Status:</span>Requires FVA results from metabolic modeling.' },
+        { id: 'flux_minimal', name: 'Flux (minimal media)', field: -1, type: 'flux', enabled: false,
+          getValue: (gene) => {
+              const geneId = gene[CONFIG.fields.FID];
+              const props = geneMetabolicProps.get(geneId);
+              return props ? props.flux_min : 0;
+          },
+          desc: '<strong>Metabolic Flux - Minimal Media</strong>' +
+            '<span class="tt-label">What it shows:</span>Predicted metabolic flux through this gene\'s reactions in pyruvate minimal media using Flux Balance Analysis (FBA). Positive = forward flux, negative = reverse flux, zero = inactive.' +
+            '<span class="tt-label">How to read it:</span>Blue (negative) = reverse flux. White (zero) = blocked/inactive. Red (positive) = forward flux. Higher magnitude = more metabolically important.' +
+            '<span class="tt-label">Biological insight:</span>High flux genes are metabolically essential. Comparing minimal vs rich reveals condition-dependent essentiality.' },
+        { id: 'flux_rich', name: 'Flux (rich media)', field: -1, type: 'flux', enabled: false,
+          getValue: (gene) => {
+              const geneId = gene[CONFIG.fields.FID];
+              const props = geneMetabolicProps.get(geneId);
+              return props ? props.flux_rich : 0;
+          },
+          desc: '<strong>Metabolic Flux - Rich Media</strong>' +
+            '<span class="tt-label">What it shows:</span>Predicted metabolic flux in complete/LB media. Genes with high flux in rich but low in minimal are involved in utilizing additional nutrients.' +
+            '<span class="tt-label">How to read it:</span>Blue (reverse) ← White (zero) → Red (forward). Higher magnitude = more active.' +
+            '<span class="tt-label">Biological insight:</span>Genes active in rich but not minimal utilize non-essential nutrients. Essential in both = core metabolism.' },
+        { id: 'rxn_class_min', name: 'Rxn Class (minimal)', field: -1, type: 'flux_class', enabled: false,
+          getValue: (gene) => {
+              const geneId = gene[CONFIG.fields.FID];
+              const props = geneMetabolicProps.get(geneId);
+              return props ? props.class_min : 'blocked';
+          },
+          desc: '<strong>Reaction Classification - Minimal Media</strong>' +
+            '<span class="tt-label">What it shows:</span>Metabolic activity classification in minimal media. Categories: blocked (no flux), forward_only, reverse_only, reversible, essential_forward, essential_reverse.' +
+            '<span class="tt-label">How to read it:</span>Red = essential (gene required for growth). Blue/Purple = active but not essential. Gray = blocked/inactive.' +
+            '<span class="tt-label">Biological insight:</span>Essential genes are drug/engineering targets. Comparing minimal vs rich identifies condition-dependent genes.' },
+        { id: 'rxn_class_rich', name: 'Rxn Class (rich)', field: -1, type: 'flux_class', enabled: false,
+          getValue: (gene) => {
+              const geneId = gene[CONFIG.fields.FID];
+              const props = geneMetabolicProps.get(geneId);
+              return props ? props.class_rich : 'blocked';
+          },
+          desc: '<strong>Reaction Classification - Rich Media</strong>' +
+            '<span class="tt-label">What it shows:</span>Metabolic activity classification in complete/LB media. Categories: blocked, forward_only, reverse_only, reversible, essential_forward, essential_reverse.' +
+            '<span class="tt-label">How to read it:</span>Red = essential. Blue/Purple = active. Gray = blocked. Essential in rich but not minimal = auxotrophy-related genes.' +
+            '<span class="tt-label">Biological insight:</span>Comparing rich vs minimal reveals biosynthetic capacity. Genes blocked in both are likely annotation errors or condition-specific.' },
         { id: 'n_phenotypes', name: '# Phenotypes', field: 'N_PHENOTYPES', type: 'sequential', enabled: false,
           desc: '<strong># Linked Phenotypes</strong>' +
             '<span class="tt-label">What it shows:</span>Number of distinct phenotypes (growth conditions) linked to this gene through the metabolic model. Each phenotype represents a growth/no-growth prediction on a specific media composition.' +
@@ -2440,12 +2468,13 @@
             const track = enabledTracks[trackIdx];
 
             let trackValue = '';
-            if (track.field >= 0) {
-                const raw = gene[track.field];
+            const raw = track.getValue ? track.getValue(gene) : (track.field >= 0 ? gene[track.field] : null);
+            if (raw != null) {
                 if (track.type === 'consistency') trackValue = raw < 0 ? 'N/A' : raw.toFixed(4);
-                else if (track.type === 'sequential') trackValue = typeof raw === 'number' ? (Number.isInteger(raw) ? raw : raw.toFixed(4)) : raw;
+                else if (track.type === 'sequential' || track.type === 'flux') trackValue = typeof raw === 'number' ? (Number.isInteger(raw) ? raw : raw.toFixed(4)) : raw;
                 else if (track.type === 'binary') trackValue = raw ? '+' : '-';
                 else if (track.type === 'categorical' && track.categories) trackValue = track.categories[raw] || raw;
+                else if (track.type === 'flux_class') trackValue = FLUX_CLASS_LABELS[raw] || raw;
                 else trackValue = raw;
             }
 
@@ -2525,13 +2554,13 @@
 
         document.getElementById('position-info').textContent = `${startIdx} - ${endIdx} of ${genes.length}`;
 
-        // Compute min/max for sequential tracks
+        // Compute min/max for sequential and flux tracks
         const trackStats = {};
         enabledTracks.forEach(track => {
-            if (track.type === 'sequential') {
+            if (track.type === 'sequential' || track.type === 'flux') {
                 let min = Infinity, max = -Infinity;
                 for (let i = 0; i < genes.length; i++) {
-                    const v = genes[i][track.field];
+                    const v = track.getValue ? track.getValue(genes[i]) : genes[i][track.field];
                     if (v < min) min = v;
                     if (v > max) max = v;
                 }
@@ -2557,7 +2586,8 @@
                 const realIdx = sortedIndices[i];
                 const gene = genes[realIdx];
                 const x = labelWidth + (i - startIdx) * geneWidth;
-                const value = gene[track.field];
+                // Get value from field or getValue function
+                const value = track.getValue ? track.getValue(gene) : gene[track.field];
 
                 let color;
                 if (track.type === 'sequential') {
@@ -2569,6 +2599,28 @@
                     color = COLORS.categorical(value);
                 } else if (track.type === 'consistency') {
                     color = COLORS.consistency(value);
+                } else if (track.type === 'flux') {
+                    // Diverging scale for flux: blue (negative) - white (0) - red (positive)
+                    const stats = trackStats[track.id];
+                    const maxAbs = Math.max(Math.abs(stats.min), Math.abs(stats.max));
+                    const normalized = value / (maxAbs || 1);  // -1 to 1
+                    // Map to color: -1=blue, 0=white, 1=red
+                    if (normalized < 0) {
+                        const t = Math.abs(normalized);  // 0 to 1
+                        const r = Math.floor(255 - (255 - 37) * t);
+                        const g = Math.floor(255 - (255 - 99) * t);
+                        const b = 255;
+                        color = `rgb(${r}, ${g}, ${b})`;
+                    } else {
+                        const t = normalized;  // 0 to 1
+                        const r = Math.floor(255 + (220 - 255) * t);
+                        const g = Math.floor(255 - (255 - 38) * t);
+                        const b = Math.floor(255 - (255 - 38) * t);
+                        color = `rgb(${r}, ${g}, ${b})`;
+                    }
+                } else if (track.type === 'flux_class') {
+                    // Categorical colors for flux classes
+                    color = FLUX_CLASS_COLORS[value] || '#e5e7eb';
                 } else {
                     color = COLORS.placeholder();
                 }
@@ -2603,6 +2655,21 @@
                 '<span>1</span>' +
                 '<div class="legend-color" style="background: #e5e7eb;"></div><span>N/A</span>',
             tip: 'Blue (0) = this gene\'s annotation disagrees with other genes in its pangenome cluster. White (0.5) = partial agreement. Orange (1.0) = full agreement. Gray = no pangenome cluster assigned or no annotation for this source. Colorblind-safe palette.'
+        },
+        flux: {
+            html: '<span class="legend-label">Flux:</span><span>Reverse</span>' +
+                '<div class="legend-color" style="background: linear-gradient(to right, #2563eb, #ffffff, #dc2626); width: 60px;"></div>' +
+                '<span>Forward</span>',
+            tip: 'Metabolic flux direction and magnitude. Blue = reverse flux (consuming product). White = zero/blocked. Red = forward flux (producing product). Higher intensity = higher flux. Data from Flux Balance Analysis.'
+        },
+        flux_class: {
+            html: '<span class="legend-label">Flux Class:</span>' +
+                '<div class="legend-color" style="background: #ef4444;"></div><span>Essential</span>' +
+                '<div class="legend-color" style="background: #3b82f6;"></div><span>Forward</span>' +
+                '<div class="legend-color" style="background: #8b5cf6;"></div><span>Reverse</span>' +
+                '<div class="legend-color" style="background: #22c55e;"></div><span>Reversible</span>' +
+                '<div class="legend-color" style="background: #d1d5db;"></div><span>Blocked</span>',
+            tip: 'Reaction classification from Flux Variability Analysis. Red = essential (required for growth). Blue = forward-only. Purple = reverse-only. Green = reversible. Gray = blocked/inactive.'
         },
         binary: {
             html: '',
@@ -3333,6 +3400,7 @@
             const mapData = await mapResp.json();
             cachedMaps[currentMapId] = mapData;
             metabolicLoaded = true;
+            computeGeneMetabolicProperties();  // Compute flux/class for each gene
             loading.style.display = 'none';
             initEscherMap(mapData);
             renderMetabolicStats();
@@ -3342,6 +3410,68 @@
             console.error('Failed to load metabolic data:', e);
             loading.textContent = 'Error loading metabolic data. Check console.';
         }
+    }
+
+    // Compute gene-level metabolic properties from reactions
+    // Store in geneMetabolicProps map: geneId -> {flux_rich, flux_min, class_rich, class_min}
+    let geneMetabolicProps = new Map();
+
+    function computeGeneMetabolicProperties() {
+        if (!reactionsData || !reactionsData.gene_index) return;
+
+        const classRank = {
+            'essential_forward': 6,
+            'essential_reverse': 5,
+            'forward_only': 4,
+            'reverse_only': 3,
+            'reversible': 2,
+            'blocked': 1
+        };
+
+        // For each gene, aggregate flux and class from all associated reactions
+        for (const [geneId, rxnIndices] of Object.entries(reactionsData.gene_index)) {
+            let maxFluxRich = 0;
+            let maxFluxMin = 0;
+            let bestClassRich = 'blocked';
+            let bestClassMin = 'blocked';
+            let bestRankRich = 0;
+            let bestRankMin = 0;
+
+            // Get all reactions for this gene
+            const rxnIds = Object.keys(reactionsData.reactions);
+            for (const rxnIdx of rxnIndices) {
+                const rxnId = rxnIds[rxnIdx];
+                const rxn = reactionsData.reactions[rxnId];
+                if (!rxn) continue;
+
+                // Track max absolute flux
+                const absFluxRich = Math.abs(rxn.flux_rich || 0);
+                const absFluxMin = Math.abs(rxn.flux_min || 0);
+                if (absFluxRich > Math.abs(maxFluxRich)) maxFluxRich = rxn.flux_rich || 0;
+                if (absFluxMin > Math.abs(maxFluxMin)) maxFluxMin = rxn.flux_min || 0;
+
+                // Track most important class (essential > active > blocked)
+                const rankRich = classRank[rxn.class_rich] || 0;
+                const rankMin = classRank[rxn.class_min] || 0;
+                if (rankRich > bestRankRich) {
+                    bestRankRich = rankRich;
+                    bestClassRich = rxn.class_rich || 'blocked';
+                }
+                if (rankMin > bestRankMin) {
+                    bestRankMin = rankMin;
+                    bestClassMin = rxn.class_min || 'blocked';
+                }
+            }
+
+            geneMetabolicProps.set(geneId, {
+                flux_rich: maxFluxRich,
+                flux_min: maxFluxMin,
+                class_rich: bestClassRich,
+                class_min: bestClassMin
+            });
+        }
+
+        console.log(`Computed metabolic properties for ${geneMetabolicProps.size} genes`);
     }
 
     function initEscherMap(mapData) {
