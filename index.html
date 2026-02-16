@@ -1378,8 +1378,9 @@
           desc: '<strong>Pangenome Cluster Size</strong>' +
             '<span class="tt-label">What it shows:</span>Total number of gene members in this gene\'s pangenome cluster across all ${METADATA.n_ref_genomes} reference genomes. For multi-cluster genes, the largest cluster is shown.' +
             '<span class="tt-label">How to read it:</span>Light = small cluster (1-5 members, rare gene family). Dark = large cluster (100+ members, expanded gene family). Ranges from 1 to 774 in this dataset.' +
-            '<span class="tt-label">Different from conservation:</span>Conservation measures how many genomes have the gene. Cluster size measures total copies including paralogs. A cluster with 100 members in 35 genomes means ~3 copies per genome on average.' +
-            '<span class="tt-label">Biological insight:</span>Large clusters often represent gene families with many paralogs (e.g., ABC transporters, two-component systems). Single-member clusters are truly unique genes.' },
+            '<span class="tt-label">⚠️ Cluster Size vs Conservation:</span>These are DIFFERENT metrics! Conservation = fraction of genomes containing this gene (0-1 scale). Cluster Size = total number of gene copies across all genomes (can be > number of genomes if there are paralogs). Example: A gene in all ${METADATA.n_ref_genomes} genomes with 2 copies each has 100% conservation but cluster size = ${METADATA.n_ref_genomes * 2}.' +
+            '<span class="tt-label">Why huge clusters exist:</span>Some gene families (ABC transporters, transcriptional regulators) have many paralogs per genome. A cluster with 774 members across ${METADATA.n_ref_genomes} genomes averages ~${Math.floor(774 / METADATA.n_ref_genomes)} copies per genome. These large clusters can throw off the color scale.' +
+            '<span class="tt-label">Biological insight:</span>Large clusters = expanded gene families with many paralogs. Small clusters = single-copy or rare genes. Compare with conservation to distinguish: high conservation + small cluster = single-copy essential gene; high conservation + large cluster = expanded gene family.' },
         { id: 'n_modules', name: 'KEGG Module Hits', field: F.N_MODULES, type: 'sequential', enabled: false,
           desc: '<strong>KEGG Module Participation</strong>' +
             '<span class="tt-label">What it shows:</span>How many KEGG metabolic modules this gene participates in. KEGG modules are functional units representing metabolic pathways, structural complexes, or signaling pathways.' +
@@ -1444,11 +1445,13 @@
           desc: '<strong># Linked Phenotypes</strong>' +
             '<span class="tt-label">What it shows:</span>Number of distinct phenotypes (growth conditions) linked to this gene through the metabolic model. Each phenotype represents a growth/no-growth prediction on a specific media composition.' +
             '<span class="tt-label">How to read it:</span>Light (0-2) = gene involved in few phenotypes. Dark (20+) = gene involved in many metabolic pathways/conditions.' +
+            '<span class="tt-label">🔬 Data source:</span>Propagated from Adam Deutschbauer\'s RB-TnSeq database for ADP1. This is organism-specific data, not computed genome-wide.' +
             '<span class="tt-label">Biological insight:</span>High phenotype counts indicate genes that are functionally important across many conditions - often central metabolism genes. Low counts suggest specialized/condition-specific roles.' },
         { id: 'n_fitness', name: '# Fitness Scores', field: 'N_FITNESS', type: 'sequential', enabled: false,
           desc: '<strong># Fitness Scores</strong>' +
             '<span class="tt-label">What it shows:</span>Number of experimental fitness scores from high-throughput mutant fitness assays where model predictions match experimental data (fitness_match=yes). Based on RB-TnSeq and similar Tn-seq datasets.' +
             '<span class="tt-label">How to read it:</span>Light (0) = no experimental validation. Dark (high count) = gene validated across many conditions.' +
+            '<span class="tt-label">🔬 Data source:</span>Propagated from Adam Deutschbauer\'s RB-TnSeq/SEEK database for ADP1. This is experimental data mapped to this genome.' +
             '<span class="tt-label">Biological insight:</span>High fitness counts indicate experimentally verified importance. Genes with high phenotype predictions but zero fitness scores may need experimental validation.' },
 
         // NEW TRACKS: Essentiality, Missing Core, Improbability
@@ -1466,6 +1469,7 @@
           desc: '<strong>Essential Gene</strong>' +
             '<span class="tt-label">What it shows:</span>Whether this gene is essential for growth based on metabolic modeling (FBA). Essential genes carry reactions with essential_forward or essential_reverse flux class.' +
             '<span class="tt-label">How to read it:</span>Gray = not metabolic. Blue = metabolic but non-essential. Red = essential for growth.' +
+            '<span class="tt-label">🔬 Data source:</span>Essentiality predictions from FBA metabolic modeling. Cross-validated with Adam\'s RB-TnSeq experimental data where available.' +
             '<span class="tt-label">Biological insight:</span>Essential genes are required for survival under modeled conditions. Deletion would be lethal. High-priority drug targets.' },
 
         { id: 'missing_core', name: 'Missing Core Status', field: -1, type: 'categorical', enabled: false,
