@@ -171,6 +171,9 @@ See `QA_VALIDATION_REPORT.md` for detailed test procedures.
 ### "Missing core count seems wrong"
 ✅ **Fixed!** Now uses correct computation from `ref_genomes_data.json`.
 
+### "# Fitness Scores track shows no data"
+⚠️ **Known Limitation:** Fitness data not available for all organisms. Track marked as placeholder (*) when source data unavailable.
+
 ## ✅ QA Validation Status
 
 **Last Validated:** 2026-02-16

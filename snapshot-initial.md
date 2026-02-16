@@ -1,0 +1,311 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]: Acinetobacter baylyi ADP1
+    - generic [ref=e5]: user_Acinetobacter_baylyi_ADP1_RAST
+    - generic [ref=e6]:
+      - generic [ref=e7]: "3235"
+      - generic [ref=e8]: genes
+    - generic [ref=e9]:
+      - generic [ref=e10]: "2957"
+      - generic [ref=e11]: core
+    - generic [ref=e12]:
+      - generic [ref=e13]: "230"
+      - generic [ref=e14]: accessory
+    - generic [ref=e15]:
+      - generic [ref=e16]: "48"
+      - generic [ref=e17]: unknown
+    - generic [ref=e18]:
+      - generic [ref=e19]: "1248"
+      - generic [ref=e20]: missing core
+    - generic [ref=e21]:
+      - generic [ref=e22]: "0.70"
+      - generic [ref=e23]: avg consistency
+    - generic [ref=e24]:
+      - generic [ref=e25]: "592"
+      - generic [ref=e26]: low consistency
+  - generic [ref=e27]:
+    - img "KBase" [ref=e28]
+    - button "Tracks" [ref=e29] [cursor=pointer]
+    - button "Distributions" [ref=e30] [cursor=pointer]
+    - button "Tree" [ref=e31] [cursor=pointer]
+    - button "Cluster" [ref=e32] [cursor=pointer]
+    - button "Metabolic Map" [ref=e33] [cursor=pointer]
+    - button "Help" [ref=e34] [cursor=pointer]
+  - generic [ref=e35]:
+    - generic [ref=e36]:
+      - generic [ref=e37]: Genome Heatmap Viewer
+      - textbox "Search genes (ID, function, KO)..." [ref=e39]
+      - generic [ref=e40]:
+        - generic [ref=e41] [cursor=pointer]:
+          - generic [ref=e42]: Analysis Views
+          - generic [ref=e43]: ▼
+        - generic [ref=e44]:
+          - button "Characterization Targets Find conserved genes with unknown function i" [ref=e45] [cursor=pointer]:
+            - generic [ref=e46]:
+              - text: Characterization Targets
+              - text: Find conserved genes with unknown function
+            - generic [ref=e47]: i
+          - button "Annotation Quality Spot annotation conflicts and gaps i" [ref=e48] [cursor=pointer]:
+            - generic [ref=e49]:
+              - text: Annotation Quality
+              - text: Spot annotation conflicts and gaps
+            - generic [ref=e50]: i
+          - button "Metabolic Landscape Map enzymatic and pathway coverage i" [ref=e51] [cursor=pointer]:
+            - generic [ref=e52]:
+              - text: Metabolic Landscape
+              - text: Map enzymatic and pathway coverage
+            - generic [ref=e53]: i
+          - button "Pangenome Structure Explore pangenome architecture and gene families i" [ref=e54] [cursor=pointer]:
+            - generic [ref=e55]:
+              - text: Pangenome Structure
+              - text: Explore pangenome architecture and gene families
+            - generic [ref=e56]: i
+          - button "Knowledge Coverage How well-characterized is each gene? i" [ref=e57] [cursor=pointer]:
+            - generic [ref=e58]:
+              - text: Knowledge Coverage
+              - text: How well-characterized is each gene?
+            - generic [ref=e59]: i
+          - button "Consistency Comparison Compare consistency across annotation sources i" [ref=e60] [cursor=pointer]:
+            - generic [ref=e61]:
+              - text: Consistency Comparison
+              - text: Compare consistency across annotation sources
+            - generic [ref=e62]: i
+      - generic [ref=e63]:
+        - generic [ref=e64] [cursor=pointer]:
+          - generic [ref=e65]: Data Tracks
+          - generic [ref=e66]: ▼
+        - generic [ref=e67]:
+          - generic [ref=e68] [cursor=pointer]:
+            - checkbox "Gene Order" [checked] [ref=e69]
+            - generic [ref=e70]: i
+            - generic [ref=e71]: Gene Order
+            - button "Sort ↓" [ref=e72]
+          - generic [ref=e73] [cursor=pointer]:
+            - checkbox "Gene Direction" [checked] [ref=e74]
+            - generic [ref=e75]: i
+            - generic [ref=e76]: Gene Direction
+            - button "Sort ↓" [ref=e77]
+          - generic [ref=e78] [cursor=pointer]:
+            - checkbox "Pangenome Conservation" [checked] [ref=e79]
+            - generic [ref=e80]: i
+            - generic [ref=e81]: Pangenome Conservation
+            - button "Sort ↓" [ref=e82]
+          - generic [ref=e83] [cursor=pointer]:
+            - checkbox "Core/Accessory" [checked] [ref=e84]
+            - generic [ref=e85]: i
+            - generic [ref=e86]: Core/Accessory
+            - button "Sort ↓" [ref=e87]
+          - generic [ref=e88] [cursor=pointer]:
+            - checkbox "Function Consensus (avg)" [checked] [ref=e89]
+            - generic [ref=e90]: i
+            - generic [ref=e91]: Function Consensus (avg)
+            - button "Sort ↓" [ref=e92]
+          - generic [ref=e93] [cursor=pointer]:
+            - checkbox "RAST Consistency" [ref=e94]
+            - generic [ref=e95]: i
+            - generic [ref=e96]: RAST Consistency
+            - button "Sort ↓" [ref=e97]
+          - generic [ref=e98] [cursor=pointer]:
+            - checkbox "KO Consistency" [ref=e99]
+            - generic [ref=e100]: i
+            - generic [ref=e101]: KO Consistency
+            - button "Sort ↓" [ref=e102]
+          - generic [ref=e103] [cursor=pointer]:
+            - checkbox "GO Consistency" [ref=e104]
+            - generic [ref=e105]: i
+            - generic [ref=e106]: GO Consistency
+            - button "Sort ↓" [ref=e107]
+          - generic [ref=e108] [cursor=pointer]:
+            - checkbox "EC Consistency" [ref=e109]
+            - generic [ref=e110]: i
+            - generic [ref=e111]: EC Consistency
+            - button "Sort ↓" [ref=e112]
+          - generic [ref=e113] [cursor=pointer]:
+            - checkbox "Bakta Consistency" [ref=e114]
+            - generic [ref=e115]: i
+            - generic [ref=e116]: Bakta Consistency
+            - button "Sort ↓" [ref=e117]
+          - generic [ref=e118] [cursor=pointer]:
+            - checkbox "Annotation Specificity" [ref=e119]
+            - generic [ref=e120]: i
+            - generic [ref=e121]: Annotation Specificity
+            - button "Sort ↓" [ref=e122]
+          - generic [ref=e123] [cursor=pointer]:
+            - checkbox "# KEGG Terms" [ref=e124]
+            - generic [ref=e125]: i
+            - generic [ref=e126]: "# KEGG Terms"
+            - button "Sort ↓" [ref=e127]
+          - generic [ref=e128] [cursor=pointer]:
+            - checkbox "# COG Terms" [ref=e129]
+            - generic [ref=e130]: i
+            - generic [ref=e131]: "# COG Terms"
+            - button "Sort ↓" [ref=e132]
+          - generic [ref=e133] [cursor=pointer]:
+            - checkbox "# Pfam Terms" [ref=e134]
+            - generic [ref=e135]: i
+            - generic [ref=e136]: "# Pfam Terms"
+            - button "Sort ↓" [ref=e137]
+          - generic [ref=e138] [cursor=pointer]:
+            - checkbox "# GO Terms" [ref=e139]
+            - generic [ref=e140]: i
+            - generic [ref=e141]: "# GO Terms"
+            - button "Sort ↓" [ref=e142]
+          - generic [ref=e143] [cursor=pointer]:
+            - checkbox "Subcellular Localization" [ref=e144]
+            - generic [ref=e145]: i
+            - generic [ref=e146]: Subcellular Localization
+            - button "Sort ↓" [ref=e147]
+          - generic [ref=e148] [cursor=pointer]:
+            - checkbox "Has Gene Name" [ref=e149]
+            - generic [ref=e150]: i
+            - generic [ref=e151]: Has Gene Name
+            - button "Sort ↓" [ref=e152]
+          - generic [ref=e153] [cursor=pointer]:
+            - checkbox "# EC Numbers" [ref=e154]
+            - generic [ref=e155]: i
+            - generic [ref=e156]: "# EC Numbers"
+            - button "Sort ↓" [ref=e157]
+          - generic [ref=e158] [cursor=pointer]:
+            - checkbox "Cluster Size" [ref=e159]
+            - generic [ref=e160]: i
+            - generic [ref=e161]: Cluster Size
+            - button "Sort ↓" [ref=e162]
+          - generic [ref=e163] [cursor=pointer]:
+            - checkbox "KEGG Module Hits" [ref=e164]
+            - generic [ref=e165]: i
+            - generic [ref=e166]: KEGG Module Hits
+            - button "Sort ↓" [ref=e167]
+          - generic [ref=e168] [cursor=pointer]:
+            - checkbox "EC Mapped Consistency" [ref=e169]
+            - generic [ref=e170]: i
+            - generic [ref=e171]: EC Mapped Consistency
+            - button "Sort ↓" [ref=e172]
+          - generic [ref=e173] [cursor=pointer]:
+            - checkbox "Protein Length" [ref=e174]
+            - generic [ref=e175]: i
+            - generic [ref=e176]: Protein Length
+            - button "Sort ↓" [ref=e177]
+          - generic [ref=e178] [cursor=pointer]:
+            - checkbox "Neighborhood Conservation*" [ref=e179]
+            - generic [ref=e180]: i
+            - generic [ref=e181]: Neighborhood Conservation*
+            - button "Sort ↓" [ref=e182]
+          - generic [ref=e183] [cursor=pointer]:
+            - checkbox "Flux (minimal media)" [ref=e184]
+            - generic [ref=e185]: i
+            - generic [ref=e186]: Flux (minimal media)
+            - button "Sort ↓" [ref=e187]
+          - generic [ref=e188] [cursor=pointer]:
+            - checkbox "Flux (rich media)" [ref=e189]
+            - generic [ref=e190]: i
+            - generic [ref=e191]: Flux (rich media)
+            - button "Sort ↓" [ref=e192]
+          - generic [ref=e193] [cursor=pointer]:
+            - checkbox "Rxn Class (minimal)" [ref=e194]
+            - generic [ref=e195]: i
+            - generic [ref=e196]: Rxn Class (minimal)
+            - button "Sort ↓" [ref=e197]
+          - generic [ref=e198] [cursor=pointer]:
+            - checkbox "Rxn Class (rich)" [ref=e199]
+            - generic [ref=e200]: i
+            - generic [ref=e201]: Rxn Class (rich)
+            - button "Sort ↓" [ref=e202]
+          - generic [ref=e203] [cursor=pointer]:
+            - checkbox "# Phenotypes" [ref=e204]
+            - generic [ref=e205]: i
+            - generic [ref=e206]: "# Phenotypes"
+            - button "Sort ↓" [ref=e207]
+          - generic [ref=e208] [cursor=pointer]:
+            - checkbox "# Fitness Scores" [ref=e209]
+            - generic [ref=e210]: i
+            - generic [ref=e211]: "# Fitness Scores"
+            - button "Sort ↓" [ref=e212]
+          - generic [ref=e213] [cursor=pointer]:
+            - checkbox "Gene Essentiality" [ref=e214]
+            - generic [ref=e215]: i
+            - generic [ref=e216]: Gene Essentiality
+            - button "Sort ↓" [ref=e217]
+          - generic [ref=e218] [cursor=pointer]:
+            - checkbox "Missing Core Status" [ref=e219]
+            - generic [ref=e220]: i
+            - generic [ref=e221]: Missing Core Status
+            - button "Sort ↓" [ref=e222]
+          - generic [ref=e223] [cursor=pointer]:
+            - checkbox "Presence Improbability" [ref=e224]
+            - generic [ref=e225]: i
+            - generic [ref=e226]: Presence Improbability
+            - button "Sort ↓" [ref=e227]
+      - generic [ref=e228]:
+        - generic [ref=e229] [cursor=pointer]:
+          - generic [ref=e230]: Sort By
+          - generic [ref=e231]: ▼
+        - generic [ref=e232]:
+          - generic [ref=e233]:
+            - button "Genome Order" [ref=e234] [cursor=pointer]
+            - generic [ref=e235]: i
+          - generic [ref=e236]:
+            - button "Conservation" [ref=e237] [cursor=pointer]
+            - generic [ref=e238]: i
+          - generic [ref=e239]:
+            - button "Consistency" [ref=e240] [cursor=pointer]
+            - generic [ref=e241]: i
+          - generic [ref=e242]:
+            - button "Annotation Depth" [ref=e243] [cursor=pointer]
+            - generic [ref=e244]: i
+          - generic [ref=e245]:
+            - button "Pangenome Status" [ref=e246] [cursor=pointer]
+            - generic [ref=e247]: i
+          - generic [ref=e248]:
+            - button "Lowest Consistency" [ref=e249] [cursor=pointer]
+            - generic [ref=e250]: i
+          - generic [ref=e251]:
+            - button "Strand Blocks" [ref=e252] [cursor=pointer]
+            - generic [ref=e253]: i
+      - generic [ref=e254]:
+        - generic [ref=e255] [cursor=pointer]:
+          - generic [ref=e256]: Actions
+          - generic [ref=e257]: ▼
+        - generic [ref=e258] [cursor=pointer]:
+          - generic [ref=e259]: ↺
+          - text: Reset to genome order
+        - generic [ref=e260] [cursor=pointer]:
+          - generic [ref=e261]: ☑
+          - text: Select all tracks
+        - generic [ref=e262] [cursor=pointer]:
+          - generic [ref=e263]: ☐
+          - text: Deselect all tracks
+        - generic [ref=e264] [cursor=pointer]:
+          - generic [ref=e265]: ↓
+          - text: Export current view (CSV)
+        - generic [ref=e266] [cursor=pointer]:
+          - generic [ref=e267]: ↓
+          - text: Export all genes (CSV)
+    - generic [ref=e268]:
+      - generic [ref=e269]:
+        - generic [ref=e270]:
+          - generic [ref=e271]: "Zoom:"
+          - slider [ref=e272]: "1"
+          - button "Reset" [ref=e273] [cursor=pointer]
+        - generic [ref=e274]: 3235 genes loaded
+      - generic [ref=e277]:
+        - generic [ref=e278]:
+          - generic [ref=e279]: "Gradient:"
+          - generic [ref=e280]: Low
+          - generic [ref=e282]: High
+        - generic [ref=e283]:
+          - generic [ref=e284]: "Consistency:"
+          - generic [ref=e285]: "0"
+          - generic [ref=e287]: "1"
+          - generic [ref=e289]: N/A
+        - generic [ref=e290]:
+          - generic [ref=e291]: "Strand:"
+          - generic [ref=e293]: Forward (+)
+          - generic [ref=e295]: Reverse (-)
+        - generic [ref=e296]:
+          - generic [ref=e297]: "Pangenome:"
+          - generic [ref=e299]: Unknown
+          - generic [ref=e301]: Accessory
+          - generic [ref=e303]: Core
+      - generic [ref=e307]:
+        - generic [ref=e308]: "Overview: Pangenome Conservation"
+        - generic [ref=e309]: 0 - 3235 of 3235
