@@ -651,7 +651,7 @@
                 <div class="minimap-viewport" id="minimap-viewport"></div>
                 <div class="minimap-info">
                     <span id="minimap-label">Genome overview</span>
-                    <span id="position-info">0 - 4617 of 4617</span>
+                    <span id="position-info">Loading...</span>
                 </div>
             </div>
         </div>
@@ -1290,9 +1290,9 @@
             '<span class="tt-label">Biological insight:</span>In E. coli, ~53% of genes are on the forward strand. Long same-color blocks near the origin of replication reflect co-directional transcription bias.' },
         { id: 'conservation', name: 'Pangenome Conservation', field: F.CONS_FRAC, type: 'sequential', enabled: true,
           desc: '<strong>Pangenome Conservation Fraction</strong>' +
-            '<span class="tt-label">What it shows:</span>What fraction of the 35 reference E. coli genomes in the pangenome have a gene in the same orthologous cluster as this gene.' +
-            '<span class="tt-label">How it\'s computed:</span>The user genome is classified against a pre-built pangenome (built with mmseqs2 clustering). For each gene, we count how many of the 35 reference genomes have at least one gene in the same cluster, then divide by 35. For genes matching multiple clusters, we take the highest value.' +
-            '<span class="tt-label">How to read it:</span>1.0 (dark) = present in all 35 reference genomes (highly conserved). 0.0 (light) = no pangenome cluster match. Most core genes are >0.7.' +
+            '<span class="tt-label">What it shows:</span>What fraction of the reference genomes in the pangenome have a gene in the same orthologous cluster as this gene.' +
+            '<span class="tt-label">How it\'s computed:</span>The user genome is classified against a pre-built pangenome (built with mmseqs2 clustering). For each gene, we count how many of the ${METADATA.n_ref_genomes} reference genomes have at least one gene in the same cluster, then divide by ${METADATA.n_ref_genomes}. For genes matching multiple clusters, we take the highest value.' +
+            '<span class="tt-label">How to read it:</span>1.0 (dark) = present in all ${METADATA.n_ref_genomes} reference genomes (highly conserved). 0.0 (light) = no pangenome cluster match. Most core genes are >0.7.' +
             '<span class="tt-label">Why it matters:</span>Highly conserved genes are typically essential or important. Low-conservation genes may be horizontally transferred, strain-specific, or phage-related.' },
         { id: 'pan_category', name: 'Core/Accessory', field: F.PAN_CAT, type: 'categorical', enabled: true, categories: PAN_NAMES,
           desc: '<strong>Core / Accessory / Unknown Classification</strong>' +
@@ -1300,8 +1300,7 @@
             '<div class="tt-colors"><span class="tt-swatch" style="background:#22c55e"></span> <strong>Core</strong> = conserved across nearly all reference genomes (high cluster member count)</div>' +
             '<div class="tt-colors"><span class="tt-swatch" style="background:#f59e0b"></span> <strong>Accessory</strong> = present in some but not all reference genomes</div>' +
             '<div class="tt-colors"><span class="tt-swatch" style="background:#9ca3af"></span> <strong>Unknown</strong> = no pangenome cluster hit (gray)</div>' +
-            '<span class="tt-label">How it\'s determined:</span>Based on the <em>is_core</em> flag from the pangenome pipeline. The threshold considers total cluster membership across 35 reference genomes.' +
-            '<span class="tt-label">In this genome:</span>3,626 core, 587 accessory, 404 unknown genes.' },
+            '<span class="tt-label">How it\'s determined:</span>Based on the <em>is_core</em> flag from the pangenome pipeline. The threshold considers total cluster membership across ${METADATA.n_ref_genomes} reference genomes.' },
         { id: 'avg_cons', name: 'Function Consensus (avg)', field: F.AVG_CONS, type: 'consistency', enabled: true,
           desc: '<strong>Average Function Consistency Score</strong>' +
             '<span class="tt-label">What it shows:</span>How well this gene\'s functional annotation agrees with other genes in the same pangenome cluster, averaged across all annotation sources (RAST, KO, GO, EC, Bakta).' +
@@ -1396,7 +1395,7 @@
             '<span class="tt-label">What matters:</span>"One Hypothetical" (285 genes) is the most interesting category: one tool found a function that the other missed. These may be recently characterized genes.' },
         { id: 'cluster_size', name: 'Cluster Size', field: F.CLUSTER_SIZE, type: 'sequential', enabled: false,
           desc: '<strong>Pangenome Cluster Size</strong>' +
-            '<span class="tt-label">What it shows:</span>Total number of gene members in this gene\'s pangenome cluster across all 35 reference genomes. For multi-cluster genes, the largest cluster is shown.' +
+            '<span class="tt-label">What it shows:</span>Total number of gene members in this gene\'s pangenome cluster across all ${METADATA.n_ref_genomes} reference genomes. For multi-cluster genes, the largest cluster is shown.' +
             '<span class="tt-label">How to read it:</span>Light = small cluster (1-5 members, rare gene family). Dark = large cluster (100+ members, expanded gene family). Ranges from 1 to 774 in this dataset.' +
             '<span class="tt-label">Different from conservation:</span>Conservation measures how many genomes have the gene. Cluster size measures total copies including paralogs. A cluster with 100 members in 35 genomes means ~3 copies per genome on average.' +
             '<span class="tt-label">Biological insight:</span>Large clusters often represent gene families with many paralogs (e.g., ABC transporters, two-component systems). Single-member clusters are truly unique genes.' },
@@ -1527,7 +1526,7 @@
           desc: '<strong>Genome Order (Default)</strong><span class="tt-label">What it does:</span>Sorts genes by their physical position on the chromosome (start coordinate). This is the natural gene order as found in the genome assembly.<span class="tt-label">When to use:</span>Default view. Use this to see the genome layout and identify operons (consecutive same-strand genes), genomic islands, and regional patterns.',
           fn: (a, b, g) => g[a][F.START] - g[b][F.START] },
         { id: 'conservation', name: 'Conservation',
-          desc: '<strong>Sort by Conservation (High \u2192 Low)</strong><span class="tt-label">What it does:</span>Sorts genes by pangenome conservation fraction (highest first). Genes present in all 35 reference genomes appear first; strain-specific genes appear last.<span class="tt-label">When to use:</span>Quickly identify the most conserved (essential) vs. strain-specific genes. The transition zone between core and accessory genes is especially interesting.',
+          desc: '<strong>Sort by Conservation (High \u2192 Low)</strong><span class="tt-label">What it does:</span>Sorts genes by pangenome conservation fraction (highest first). Genes present in all reference genomes appear first; strain-specific genes appear last.<span class="tt-label">When to use:</span>Quickly identify the most conserved (essential) vs. strain-specific genes. The transition zone between core and accessory genes is especially interesting.',
           fn: (a, b, g) => g[b][F.CONS_FRAC] - g[a][F.CONS_FRAC] },
         { id: 'consistency', name: 'Consistency',
           desc: '<strong>Sort by Avg Consistency (High \u2192 Low)</strong><span class="tt-label">What it does:</span>Sorts by average function consistency score (highest first). Genes where all annotation sources agree with cluster members appear first. N/A genes (no pangenome cluster) are pushed to the end.<span class="tt-label">When to use:</span>Identify well-annotated genes (green at top) vs. potentially mis-annotated or novel-function genes (red near bottom).',
@@ -3232,7 +3231,7 @@
                     <strong style="color:#6A6158;">Gene Features:</strong> UMAP of 23 gene properties (conservation, consistency scores, annotation counts, protein length). Groups genes with similar functional profiles.
                 </div>
                 <div style="margin-top:4px; font-size:10px; color:#9D9389; line-height:1.5;">
-                    <strong style="color:#6A6158;">Presence/Absence:</strong> UMAP of binary cluster membership across ${(CONFIG && CONFIG.n_ref_genomes) || 35} reference genomes. Groups genes with similar phylogenetic distribution.
+                    <strong style="color:#6A6158;">Presence/Absence:</strong> UMAP of binary cluster membership across ${METADATA.n_ref_genomes} reference genomes. Groups genes with similar phylogenetic distribution.
                 </div>
             `;
         } catch (e) {
@@ -3254,7 +3253,7 @@
         if (clusterEmbedding === 'features') {
             descEl.textContent = 'UMAP of conservation, consistency scores, annotation counts, protein length';
         } else {
-            const nRef = (CONFIG && CONFIG.n_ref_genomes) || 35;
+            const nRef = METADATA.n_ref_genomes;
             descEl.textContent = `UMAP of pangenome cluster presence/absence across ${nRef} reference genomes`;
         }
         clusterZoom = 1; clusterPanX = 0; clusterPanY = 0;
