@@ -596,7 +596,7 @@
             </div>
             <!-- Protein Distribution -->
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Protein Distribution</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -669,7 +669,7 @@
                 <div id="tree-stat-toggles"></div>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Genome Comparison</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -774,7 +774,7 @@
         <div class="sidebar">
             <div class="sidebar-header">Metabolic Map</div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Actions</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -814,14 +814,14 @@
                 </div>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Legend</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
                 <div class="metabolic-legend" id="metabolic-legend"></div>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Stats</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -830,7 +830,7 @@
                 </div>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Pathway Coverage</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -839,7 +839,7 @@
                 </div>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Growth Phenotypes</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -848,7 +848,7 @@
                 </div>
             </div>
             <div class="sidebar-section collapsed">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Unmapped Reactions</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -857,7 +857,7 @@
                 </div>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                <div class="sidebar-section-title" >
                     <span>Reaction Detail</span>
                     <span class="toggle-icon">&#9660;</span>
                 </div>
@@ -1715,13 +1715,10 @@
         activeTab = tabId;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
         document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('active', t.id === 'tab-' + tabId));
-        // Setup section collapse for new tabs
-        document.querySelectorAll('.tab-content.active .sidebar-section-title').forEach(title => {
-            if (!title._collapseWired) {
-                title.addEventListener('click', () => title.parentElement.classList.toggle('collapsed'));
-                title._collapseWired = true;
-            }
-        });
+
+        // Setup section collapse for the active tab (handles newly loaded tabs)
+        setupSectionCollapse();
+
         if (tabId === 'tree') {
             if (!treeLoaded) loadTreeData();
             if (!summaryLoaded) loadSummaryData();
@@ -1825,10 +1822,14 @@
     }
 
     function setupSectionCollapse() {
+        // Remove any existing listeners to avoid duplicates
         document.querySelectorAll('.sidebar-section-title').forEach(title => {
-            title.addEventListener('click', () => {
-                title.parentElement.classList.toggle('collapsed');
-            });
+            if (!title._collapseWired) {
+                title.addEventListener('click', () => {
+                    title.parentElement.classList.toggle('collapsed');
+                });
+                title._collapseWired = true;
+            }
         });
     }
 
