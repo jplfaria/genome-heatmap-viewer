@@ -139,17 +139,27 @@ def main():
     genome_stats = {}
     for gid in genome_ids:
         clusters = all_clusters_by_genome[gid]
-        n_genes = len(clusters)  # Approximation (clusters, not genes)
+        n_clusters = len(clusters)
 
-        # Count core genes (clusters marked is_core=1)
+        # Count actual genes for this genome
         if gid == user_genome_id:
             # User genome: count from genome_features
+            n_genes = conn.execute("""
+                SELECT COUNT(*) FROM genome_features
+                WHERE genome_id = ?
+            """, (gid,)).fetchone()[0]
+
             core_count = conn.execute("""
                 SELECT COUNT(*) FROM genome_features
                 WHERE genome_id = ? AND pangenome_is_core = 1
             """, (gid,)).fetchone()[0]
         else:
             # Reference genome: count from pan_genome_features
+            n_genes = conn.execute("""
+                SELECT COUNT(*) FROM pan_genome_features
+                WHERE genome_id = ?
+            """, (gid,)).fetchone()[0]
+
             core_count = conn.execute("""
                 SELECT COUNT(*) FROM pan_genome_features
                 WHERE genome_id = ? AND is_core = 1
@@ -159,7 +169,7 @@ def main():
 
         genome_stats[gid] = {
             "n_genes": n_genes,
-            "n_clusters": len(clusters),
+            "n_clusters": n_clusters,
             "core_pct": core_pct,
         }
 

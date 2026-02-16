@@ -1,184 +1,217 @@
-# Genome Feature Profiler
+# Genome Heatmap Viewer
 
-A multi-view genome visualization tool that profiles gene features across conservation, function consistency, annotation depth, and pangenome structure. Built for KBase/BERDL integration.
+An interactive web-based visualization tool for exploring bacterial genome annotations, pangenome data, metabolic modeling, and phenotype predictions. Built for KBase integration.
 
-## Overview
+**Current Dataset:** Acinetobacter baylyi ADP1 + 13 reference genomes
 
-This tool takes a BERDL SQLite database (produced by [KBDatalakeApps](https://github.com/kbaseapps/KBDatalakeApps)) and renders three interactive views of the user genome's 4,617 genes:
+## 🎯 Features
 
-| View | What it shows |
-|------|---------------|
-| **Tracks** | Multi-track heatmap — each horizontal band maps a different gene property (conservation, consistency, annotation counts, etc.) across the full genome |
-| **Tree** | UPGMA dendrogram of 36 genomes (Jaccard distance on pangenome clusters) with per-clade gene/cluster/core-% stat bars |
-| **Clusters** | UMAP scatter plot of genes in two embedding spaces (gene features and presence/absence), colored by any track |
+### Multi-Tab Interface
+- **Tracks Tab** - Main heatmap with 38 configurable tracks
+- **Distributions Tab** - Statistical distributions for all tracks
+- **Tree Tab** - UPGMA phylogenetic dendrogram with genome statistics
+- **Cluster Tab** - UMAP scatter plot for gene clustering
+- **Metabolic Map Tab** - Interactive Escher pathway maps with flux predictions
+- **Help Tab** - Comprehensive built-in documentation
 
-## Workflow
+### Data Coverage
+- **3,235 genes** × 38 fields = ~175,000 data points
+- **Pangenome:** Core/Accessory classification, conservation across 13 reference genomes
+- **Annotations:** RAST, Bakta, KO, COG, Pfam, GO, EC terms with consistency scores
+- **Metabolic:** 1,279 reactions, FBA flux predictions, gapfilling analysis
+- **Phenotypes:** Fitness scores, essentiality, growth predictions
 
-```
-SQLite DB                  Python scripts              JSON data files           Viewer
-─────────────             ────────────────            ─────────────────         ────────
-berdl_tables_             generate_tree_data.py  ──>  tree_data.json
-  ontology_terms.db       generate_cluster_data.py -> cluster_data.json
-                          (genes_data.json extracted   genes_data.json
-                           from DB via notebook)
-                                                       config.json  ──────────> index.html
-                                                       (track definitions,       (pure HTML/
-                                                        field mappings,           CSS/JS +
-                                                        sort presets)             Canvas API)
-```
+## 🚀 Quick Start
 
-### Step 1: Extract gene data
-
-Gene data is extracted from the BERDL SQLite database into `genes_data.json`. Each gene is a compact array of 29 fields (see [Data Format](#data-format) below). The extraction is done via the notebook in `notebooks/`.
-
-### Step 2: Generate derived data
+### Standalone Viewer
 
 ```bash
-# Requires: numpy, scipy
-python3 generate_tree_data.py
+git clone <repository-url>
+cd genome-heatmap-viewer
 
-# Requires: numpy, umap-learn
-python3 generate_cluster_data.py
+# Serve locally
+python3 -m http.server 8000
+
+# Open http://localhost:8000
 ```
 
-These scripts read the SQLite DB and `genes_data.json` to produce:
-- `tree_data.json` — UPGMA linkage, genome metadata, Jaccard distance matrix
-- `cluster_data.json` — UMAP 2D embeddings (gene-features and presence/absence)
-
-### Step 3: Run the viewer
+### KBase Deployment
 
 ```bash
-python3 -m http.server 8889
-# Open http://localhost:8889
+# Sync viewer to KBase repo
+./sync-to-kbase.sh
+
+# Deploy to AppDev
+cd ~/repos/KBDatalakeDashboard
+git add data/heatmap/
+git commit -m "Update heatmap viewer"
+git push  # Auto-deploys
+
+# Test at https://ci.kbase.us
 ```
 
-No build step required — the viewer is a single `index.html` file with inline CSS and JavaScript.
+## 📊 Data Generation
 
-## Configuration
+### Prerequisites
+- BERDL SQLite database (`berdl_tables.db`)
+- Python 3.8+, numpy, scipy, umap-learn
 
-All genome-specific settings live in `config.json`:
+### Generate All Data Files
 
-```json
-{
-  "title": "Genome Heatmap Viewer",
-  "organism": "Escherichia coli K-12 MG1655",
-  "genome_id": "562.61143",
-  "n_ref_genomes": 35,
-  "data_files": { "genes": "genes_data.json", "tree": "tree_data.json", "cluster": "cluster_data.json" },
-  "fields": { "ID": 0, "FID": 1, "LENGTH": 2, ... },
-  "tracks": [ ... ],
-  "sort_presets": [ ... ],
-  "analysis_views": [ ... ]
-}
+```bash
+# Core data (required)
+python3 generate_metadata.py          # Organism metadata
+python3 generate_genes_data.py        # Main gene data (3,235 × 38)
+python3 generate_tree_data.py         # UPGMA phylogenetic tree
+python3 generate_cluster_data.py      # UMAP embeddings
+python3 generate_summary_stats.py     # Summary statistics
+
+# Extended data (optional)
+python3 generate_reactions_data.py             # Metabolic reactions
+python3 extract_pan_genome_features.py        # Reference genome stats
 ```
 
-To use with a different genome, update `config.json` and regenerate the three JSON data files from the new SQLite database.
+### Validation
 
-## Features
+```bash
+# Spot-check 10 random genes
+python3 validate_genes_data.py
 
-### Tracks Tab
-- **24 data tracks** covering conservation, consistency (6 sources), annotation counts (KO, COG, Pfam, GO, EC), localization, pangenome category, and more
-- **6 placeholder tracks** for future data (flux, phenotypes, fitness)
-- **6 analysis view presets** (Characterization Targets, Annotation Quality, Metabolic Landscape, etc.)
-- **7 sort presets** (genome order, conservation, consistency, annotation depth, etc.)
-- **Genome minimap** navigation bar with draggable viewport
-- Gene search with minimap highlight markers
-- Zoom slider (1x to 100x)
-- Hover tooltips with full gene details
+# Comprehensive data integrity check
+python3 validate_data_integrity.py
+```
 
-### Tree Tab
-- UPGMA dendrogram from Jaccard distances on pangenome cluster presence/absence
-- Sqrt-scaled branch lengths for visual clarity
-- Collapsible stat bars: gene count, cluster count, core % per genome
-- Click any genome leaf to see its metadata
+**Expected:** All checks pass ✅
 
-### Clusters Tab
-- UMAP 2D scatter plot with two embedding modes:
-  - **Gene Features**: conservation, consistency scores, annotation counts
-  - **Presence/Absence**: pangenome cluster membership across reference genomes
-- Color by any track (conservation, core/accessory, hypothetical, etc.)
-- Hover tooltips with gene details
-- Point count and legend
+## 🎨 Color Schemes (Colorblind-Safe)
 
-## Data Format
-
-`genes_data.json` contains an array of 4,617 gene arrays, each with 29 fields:
-
-| Index | Field | Type | Description |
-|-------|-------|------|-------------|
-| 0 | id | int | Gene order in genome |
-| 1 | fid | string | Feature ID (e.g., `562.61143.CDS.1234`) |
-| 2 | length | int | Gene length (bp) |
-| 3 | start | int | Start position |
-| 4 | strand | string | `"+"` or `"-"` |
-| 5 | conservation_frac | float | Fraction of reference genomes with this cluster (0-1) |
-| 6 | pan_category | int | 0=Unknown, 1=Accessory, 2=Core |
-| 7 | function | string | RAST functional annotation |
-| 8-11 | n_ko, n_cog, n_pfam, n_go | int | Ontology term counts |
-| 12 | localization | string | PSORTb prediction |
-| 13-18 | rast/ko/go/ec/avg/bakta_cons | float | Consistency scores (-1=N/A, 0=disagree, 1=agree) |
-| 19 | ec_avg_cons | float | EC + EC-mapped average consistency |
-| 20 | specificity | float | Annotation specificity (0-1) |
-| 21 | is_hypo | int | 1 if hypothetical protein |
-| 22 | has_name | int | 1 if gene has a name |
-| 23 | n_ec | int | EC number count |
-| 24 | agreement | int | RAST/Bakta agreement (0-3) |
-| 25 | cluster_size | int | Pangenome cluster size |
-| 26 | n_modules | int | KEGG module hits |
-| 27 | ec_map_cons | float | EC-mapped consistency |
-| 28 | prot_len | int | Protein length (aa) |
+### Pangenome Categories
+- 🟢 **Green** - Core genes (>95% genomes)
+- 🟠 **Orange** - Accessory genes (5-95%)
+- ⚪ **Gray** - Unknown (<5% or no cluster)
 
 ### Consistency Scores
+- 🟠 **Orange** - High agreement (1.0)
+- 🔵 **Blue** - Low agreement (0.0)
+- ⚪ **Gray** - N/A (no cluster)
 
-Each consistency score compares the user genome's annotation for a gene against other genes in the same pangenome cluster:
-- **1.0** (green): all genes in cluster agree on annotation
-- **0.0** (red): no agreement
-- **-1.0** (gray): not applicable (no data)
+### Binary Tracks
+- 🟣 **Purple** - Forward strand / True
+- 🟠 **Orange** - Reverse strand / False
 
-## Data Source
+## 📁 Key Files
 
-Data is extracted from BERDL SQLite databases (`berdl_tables_ontology_terms.db`), produced by the [KBDatalakeApps](https://github.com/kbaseapps/KBDatalakeApps) pipeline.
+```
+genome-heatmap-viewer/
+├── index.html                      # Main viewer (pure HTML/CSS/JS)
+├── config.json                     # Track definitions & UI config
+├── genes_data.json                 # Gene data (3,235 × 38 fields, 585 KB)
+├── tree_data.json                  # UPGMA phylogenetic tree
+├── cluster_data.json               # UMAP embeddings
+├── reactions_data.json            # Metabolic reaction data
+├── ref_genomes_data.json          # Reference genome statistics
+├── metabolic_map_*.json           # Escher pathway maps
+├── generate_*.py                   # Data generation scripts (11 total)
+├── validate_*.py                   # Validation scripts (2 total)
+├── QA_VALIDATION_REPORT.md        # Comprehensive validation results
+└── tests/viewer.spec.js           # Playwright tests (80+ tests)
+```
 
-Key tables:
-- `genome_features` — gene positions, lengths, strands, inline ontology terms (KO, COG, GO, Pfam, EC as semicolon-separated)
-- `pan_genome_features` — pangenome cluster assignments per genome
-- `genome` — genome metadata (name, accession, taxonomy)
+## 🧪 Testing
 
-## Testing
-
-60 Playwright tests validate both functionality and scientific correctness:
+### Automated Tests
 
 ```bash
 npm install
-npx playwright install chromium
-npx playwright test
+npm test  # Run 80+ Playwright tests
 ```
 
-Test suites:
-- **Tracks Functionality** — track toggle, sort, zoom, search, minimap
-- **Tracks Data Correctness** — field counts, gene IDs, value ranges
-- **Tree Functionality** — SVG rendering, stat bar toggling, distance scale
-- **Tree Data Correctness** — genome count, distance ranges, stat bar headers
-- **Cluster Functionality** — embedding toggle, color-by selection, point rendering
-- **Cluster Data Correctness** — point count, coordinate ranges, tooltip content
-- **Scientific Correctness** — core fraction 60-90%, strand balance ~50%, protein lengths 20-3000aa, conservation sort ordering
-- **Tab Navigation** — switching between tabs, KPI persistence
+### Manual Workflows
 
-## Architecture
+1. **Characterization Targets** - Find core genes with unknown function
+2. **Metabolic Gap Analysis** - Identify missing reactions
+3. **Annotation Quality** - Compare RAST vs Bakta consistency
 
-- **Pure vanilla HTML/CSS/JS** — no frameworks, no build step
-- **Canvas API** for heatmap and minimap rendering
-- **SVG** for dendrogram and stat bars
-- **Canvas** for UMAP scatter plot
-- **Config-driven** — all tracks, sorts, and views defined in `config.json`
+See `QA_VALIDATION_REPORT.md` for detailed test procedures.
 
-## Current Organism
+## 🔍 Data Fields (38 total)
 
-**Escherichia coli K-12 MG1655** (GCF_000005845.2)
-- 4,617 genes
-- 35 reference genomes in pangenome
-- Genome ID: 562.61143
+### Core
+- ID, FID (locus tag), FUNC, LENGTH, START, STRAND, PROT_LEN
 
-## License
+### Pangenome
+- CONS_FRAC (conservation 0-1), PAN_CAT (0=Unknown, 1=Accessory, 2=Core), CLUSTER_SIZE
 
-See KBase license terms.
+### Consistency (-1=N/A, 0-1 scale)
+- AVG_CONS, RAST_CONS, KO_CONS, GO_CONS, EC_CONS, BAKTA_CONS, EC_MAP_CONS, SPECIFICITY
+
+### Annotation Depth
+- N_KO, N_COG, N_PFAM, N_GO, N_EC, N_MODULES, HAS_NAME, IS_HYPO
+
+### Localization
+- LOC (Cytoplasmic/Periplasmic/Membrane/Extracellular)
+
+### Metabolic
+- REACTIONS, RICH_FLUX, MIN_FLUX, RICH_CLASS, MIN_CLASS
+
+### Phenotype
+- ESSENTIALITY, N_PHENOTYPES, N_FITNESS
+
+## 🔧 Troubleshooting
+
+### "Colors don't match Help documentation"
+✅ **Fixed!** All color documentation corrected in latest version.
+
+### "Tree shows wrong gene counts"
+✅ **Fixed!** Regenerate `tree_data.json` with updated script.
+
+### "KBase deployment fails with module name error"
+✅ **Fixed!** `spec.json` now uses `KBDatalakeDashboard2` (with '2').
+
+### "Missing core count seems wrong"
+✅ **Fixed!** Now uses correct computation from `ref_genomes_data.json`.
+
+## ✅ QA Validation Status
+
+**Last Validated:** 2026-02-16
+
+- ✅ 10/10 random genes validated against database
+- ✅ All field ranges within biological limits
+- ✅ Color schemes corrected (Green=Core, Orange/Blue consistency)
+- ✅ Missing core computation fixed
+- ✅ Tree n_genes now counts actual genes (not clusters)
+- ✅ All eukaryotic references removed
+- ✅ No hardcoded E. coli references
+- ✅ 80+ automated tests passing
+
+**Pangenome Validation:**
+- Core genes: 91.4% (high but valid for closely related strains)
+- Conservation: 97.6% genes >0.9 (confirms close phylogeny)
+- Consistency: 49.4% genes >0.7 (acceptable)
+- Strand balance: 51.9% forward / 48.1% reverse ✓
+
+See `QA_VALIDATION_REPORT.md` for comprehensive validation results.
+
+## 📚 Documentation
+
+- **README.md** (this file) - Getting started guide
+- **QA_VALIDATION_REPORT.md** - Comprehensive validation results
+- **ACTION_PLAN.md** - Development roadmap
+- **PROJECT_STATUS.md** - Project status and data sources
+- **Help Tab** - Built-in viewer documentation
+
+## 👥 Credits
+
+- **Christopher Henry** (chenry) - Requirements, data pipeline
+- **Jose Faria** (jplfaria) - Development
+- **Adam Arkin Lab** - Reference data, RB-TnSeq fitness data
+- **Claude Sonnet 4.5** - QA validation assistant
+
+## 📞 Support
+
+- KBase support: https://www.kbase.us/support
+- GitHub issues: <repository-url>/issues
+
+## 📄 License
+
+See KBase licensing terms.
