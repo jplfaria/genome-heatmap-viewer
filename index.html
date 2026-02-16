@@ -547,6 +547,20 @@
         .help-analysis-view .purpose { font-size: 13px; color: var(--kb-base-dark); margin-bottom: 8px; }
         .help-analysis-view .tracks { font-size: 12px; color: var(--kb-base); }
         .help-analysis-view .use-case { font-size: 12px; color: var(--kb-base-dark); background: white; padding: 8px; border-radius: 3px; margin-top: 8px; font-style: italic; }
+        /* Distributions Tab */
+        .distributions-container { flex: 1; overflow: auto; background: var(--kb-white); padding: 24px; }
+        .dist-chart-container { background: white; border: 1px solid var(--kb-base-lighter); border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+        .dist-chart-title { font-size: 16px; font-weight: 600; color: var(--kb-base-dark); margin-bottom: 16px; }
+        .dist-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .dist-stat-card { background: var(--kb-base-lightest); padding: 12px; border-radius: 6px; border-left: 3px solid var(--kb-primary); }
+        .dist-stat-label { font-size: 11px; color: var(--kb-base); text-transform: uppercase; font-weight: 500; }
+        .dist-stat-value { font-size: 20px; font-weight: 600; color: var(--kb-base-dark); margin-top: 4px; }
+        .dist-chart-svg { width: 100%; height: 300px; }
+        .dist-bar { transition: opacity 0.2s; }
+        .dist-bar:hover { opacity: 0.7; }
+        .dist-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; font-size: 12px; }
+        .dist-legend-item { display: flex; align-items: center; gap: 6px; }
+        .dist-legend-color { width: 16px; height: 16px; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -558,6 +572,7 @@
         <button class="tab-btn active" data-tab="tracks" onclick="switchTab('tracks')">Tracks</button>
         <button class="tab-btn" data-tab="tree" onclick="switchTab('tree')">Tree</button>
         <button class="tab-btn" data-tab="cluster" onclick="switchTab('cluster')">Cluster</button>
+        <button class="tab-btn" data-tab="distributions" onclick="switchTab('distributions')">Distributions</button>
         <button class="tab-btn" data-tab="metabolic" onclick="switchTab('metabolic')">Metabolic Map</button>
         <button class="tab-btn" data-tab="help" onclick="switchTab('help')" style="margin-left: auto;">Help</button>
     </div>
@@ -755,6 +770,40 @@
                 <div class="tooltip" id="cluster-tooltip"></div>
             </div>
             <div class="cluster-legend" id="cluster-legend"></div>
+        </div>
+    </div>
+
+    <!-- Tab: Distributions -->
+    <div class="tab-content" id="tab-distributions">
+        <div class="sidebar">
+            <div class="sidebar-header">Track Distributions</div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>Select Track</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px;">
+                    <select id="dist-track-select" style="width: 100%; padding: 8px; border: 1px solid var(--kb-base-lighter); border-radius: 4px; font-size: 12px; background: white;" onchange="renderDistributions()">
+                        <option value="">-- Choose a track --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>About</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px; font-size: 11px; color: var(--kb-base); line-height: 1.5;">
+                    <p style="margin: 0 0 8px 0;">Visualize the distribution of gene counts across different track values.</p>
+                    <p style="margin: 0;"><strong>Categorical tracks</strong> (e.g., Core/Accessory) show pie and bar charts. <strong>Numerical tracks</strong> (e.g., Conservation) show histograms.</p>
+                </div>
+            </div>
+        </div>
+        <div class="distributions-container" id="distributions-container">
+            <div style="text-align: center; color: var(--kb-base-light); margin-top: 100px;">
+                <p style="font-size: 16px; margin-bottom: 8px;">📊 Select a track to view its distribution</p>
+                <p style="font-size: 12px;">Use the dropdown in the sidebar to choose a track</p>
+            </div>
         </div>
     </div>
 
@@ -1611,6 +1660,9 @@
     let clusterZoom = 1, clusterPanX = 0, clusterPanY = 0;
     let clusterDragging = false, clusterDragStartX = 0, clusterDragStartY = 0, clusterDragPanX = 0, clusterDragPanY = 0;
 
+    // Distributions state
+    let distributionsLoaded = false;
+
     // Metabolic map state
     let metabolicLoaded = false;
     let reactionsData = null;
@@ -1708,6 +1760,7 @@
             if (!summaryLoaded) loadSummaryData();
         }
         if (tabId === 'cluster' && !clusterLoaded) loadClusterData();
+        if (tabId === 'distributions' && !distributionsLoaded) initDistributions();
         if (tabId === 'metabolic') {
             if (!metabolicLoaded) loadMetabolicData();
             if (!summaryLoaded) loadSummaryData();
@@ -3482,6 +3535,408 @@
         window.addEventListener('resize', () => {
             if (activeTab === 'cluster') { resizeCluster(); renderCluster(); }
         });
+    }
+
+    // ============================================================
+    // === DISTRIBUTIONS TAB ===
+    // ============================================================
+
+    function initDistributions() {
+        if (distributionsLoaded) return;
+        if (!genes || genes.length === 0) {
+            console.error('Cannot initialize distributions: genes not loaded');
+            return;
+        }
+
+        // Populate track dropdown
+        const select = document.getElementById('dist-track-select');
+        select.innerHTML = '<option value="">-- Choose a track --</option>';
+
+        TRACKS.forEach(track => {
+            const option = document.createElement('option');
+            option.value = track.id;
+            option.textContent = track.name;
+            select.appendChild(option);
+        });
+
+        distributionsLoaded = true;
+    }
+
+    function renderDistributions() {
+        const trackId = document.getElementById('dist-track-select').value;
+        if (!trackId) {
+            document.getElementById('distributions-container').innerHTML = `
+                <div style="text-align: center; color: var(--kb-base-light); margin-top: 100px;">
+                    <p style="font-size: 16px; margin-bottom: 8px;">📊 Select a track to view its distribution</p>
+                    <p style="font-size: 12px;">Use the dropdown in the sidebar to choose a track</p>
+                </div>
+            `;
+            return;
+        }
+
+        const track = TRACKS.find(t => t.id === trackId);
+        if (!track) return;
+
+        const container = document.getElementById('distributions-container');
+
+        if (track.type === 'categorical') {
+            renderCategoricalDistribution(track, container);
+        } else if (track.type === 'consistency') {
+            renderConsistencyDistribution(track, container);
+        } else if (track.type === 'sequential' || track.type === 'binary' || track.type === 'flux') {
+            renderNumericalDistribution(track, container);
+        }
+    }
+
+    function renderCategoricalDistribution(track, container) {
+        const counts = {};
+        const categories = track.categories || [];
+
+        // Initialize counts
+        if (Array.isArray(categories)) {
+            categories.forEach(cat => counts[cat] = 0);
+        } else if (typeof categories === 'string' && CONFIG.categories[categories]) {
+            CONFIG.categories[categories].forEach(cat => counts[cat] = 0);
+        } else if (track.id === 'pan_category') {
+            PAN_NAMES.forEach(cat => counts[cat] = 0);
+        } else if (track.id === 'localization') {
+            LOC_NAMES.forEach(cat => counts[cat] = 0);
+        }
+
+        // Count genes
+        genes.forEach(g => {
+            let val;
+            if (track.getValue) {
+                val = track.getValue(g);
+            } else {
+                const idx = g[track.field];
+                if (track.id === 'pan_category') val = PAN_NAMES[idx];
+                else if (track.id === 'localization') val = LOC_NAMES[idx];
+                else val = idx;
+            }
+            if (val !== undefined && val !== null) {
+                if (counts[val] !== undefined) counts[val]++;
+                else counts[val] = 1;
+            }
+        });
+
+        const total = genes.length;
+        const entries = Object.entries(counts).filter(([_, count]) => count > 0);
+
+        // Generate colors
+        const colors = entries.map((_, i) => COLORS.categorical(i));
+
+        // Render
+        let html = `
+            <div class="dist-chart-container">
+                <div class="dist-chart-title">${track.name} Distribution</div>
+                <div class="dist-stats">
+                    <div class="dist-stat-card">
+                        <div class="dist-stat-label">Total Genes</div>
+                        <div class="dist-stat-value">${total.toLocaleString()}</div>
+                    </div>
+                    <div class="dist-stat-card">
+                        <div class="dist-stat-label">Categories</div>
+                        <div class="dist-stat-value">${entries.length}</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <h3 style="font-size: 14px; font-weight: 600; color: var(--kb-base-dark); margin-bottom: 12px;">Bar Chart</h3>
+                        <svg class="dist-chart-svg" id="dist-bar-chart"></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 14px; font-weight: 600; color: var(--kb-base-dark); margin-bottom: 12px;">Pie Chart</h3>
+                        <svg class="dist-chart-svg" id="dist-pie-chart" viewBox="0 0 400 300"></svg>
+                    </div>
+                </div>
+
+                <div class="dist-legend" id="dist-legend"></div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--kb-base-dark); margin-bottom: 8px;">Breakdown</h3>
+                    <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--kb-base-lightest); border-bottom: 2px solid var(--kb-base-lighter);">
+                                <th style="padding: 8px; text-align: left;">Category</th>
+                                <th style="padding: 8px; text-align: right;">Count</th>
+                                <th style="padding: 8px; text-align: right;">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${entries.map(([cat, count], i) => `
+                                <tr style="border-bottom: 1px solid var(--kb-base-lightest);">
+                                    <td style="padding: 8px;">
+                                        <span class="dist-legend-color" style="background: ${colors[i]}; display: inline-block; margin-right: 6px;"></span>
+                                        ${cat}
+                                    </td>
+                                    <td style="padding: 8px; text-align: right; font-weight: 600;">${count.toLocaleString()}</td>
+                                    <td style="padding: 8px; text-align: right;">${((count / total) * 100).toFixed(1)}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Render bar chart
+        renderBarChart(entries, colors, total);
+
+        // Render pie chart
+        renderPieChart(entries, colors, total);
+
+        // Render legend
+        const legend = document.getElementById('dist-legend');
+        legend.innerHTML = entries.map(([cat, count], i) => `
+            <div class="dist-legend-item">
+                <div class="dist-legend-color" style="background: ${colors[i]};"></div>
+                <span>${cat}: ${count} (${((count / total) * 100).toFixed(1)}%)</span>
+            </div>
+        `).join('');
+    }
+
+    function renderBarChart(entries, colors, total) {
+        const svg = document.getElementById('dist-bar-chart');
+        const width = svg.clientWidth || 400;
+        const height = 300;
+        const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+        const chartWidth = width - margin.left - margin.right;
+        const chartHeight = height - margin.top - margin.bottom;
+
+        const maxCount = Math.max(...entries.map(([_, count]) => count));
+        const barWidth = chartWidth / entries.length;
+
+        let svgContent = `<svg width="${width}" height="${height}">`;
+
+        // Bars
+        entries.forEach(([cat, count], i) => {
+            const barHeight = (count / maxCount) * chartHeight;
+            const x = margin.left + i * barWidth + barWidth * 0.1;
+            const y = margin.top + chartHeight - barHeight;
+            const w = barWidth * 0.8;
+
+            svgContent += `
+                <rect x="${x}" y="${y}" width="${w}" height="${barHeight}"
+                      fill="${colors[i]}" class="dist-bar">
+                    <title>${cat}: ${count} genes (${((count / total) * 100).toFixed(1)}%)</title>
+                </rect>
+            `;
+        });
+
+        // Y-axis
+        svgContent += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + chartHeight}" stroke="var(--kb-base-light)" stroke-width="1"/>`;
+
+        // X-axis
+        svgContent += `<line x1="${margin.left}" y1="${margin.top + chartHeight}" x2="${margin.left + chartWidth}" y2="${margin.top + chartHeight}" stroke="var(--kb-base-light)" stroke-width="1"/>`;
+
+        // Y-axis ticks
+        for (let i = 0; i <= 5; i++) {
+            const y = margin.top + chartHeight - (i / 5) * chartHeight;
+            const val = Math.round((i / 5) * maxCount);
+            svgContent += `
+                <line x1="${margin.left - 5}" y1="${y}" x2="${margin.left}" y2="${y}" stroke="var(--kb-base-light)" stroke-width="1"/>
+                <text x="${margin.left - 10}" y="${y + 4}" text-anchor="end" font-size="10" fill="var(--kb-base)">${val}</text>
+            `;
+        }
+
+        // X-axis labels (abbreviated if needed)
+        entries.forEach(([cat, _], i) => {
+            const x = margin.left + i * barWidth + barWidth * 0.5;
+            const label = cat.length > 10 ? cat.substring(0, 8) + '...' : cat;
+            svgContent += `
+                <text x="${x}" y="${margin.top + chartHeight + 15}"
+                      text-anchor="middle" font-size="10" fill="var(--kb-base)"
+                      transform="rotate(45, ${x}, ${margin.top + chartHeight + 15})">${label}</text>
+            `;
+        });
+
+        svgContent += '</svg>';
+        svg.innerHTML = svgContent;
+    }
+
+    function renderPieChart(entries, colors, total) {
+        const svg = document.getElementById('dist-pie-chart');
+        const cx = 200, cy = 150, radius = 100;
+
+        let currentAngle = -Math.PI / 2;
+        let svgContent = '<g>';
+
+        entries.forEach(([cat, count], i) => {
+            const angle = (count / total) * 2 * Math.PI;
+            const endAngle = currentAngle + angle;
+
+            const x1 = cx + radius * Math.cos(currentAngle);
+            const y1 = cy + radius * Math.sin(currentAngle);
+            const x2 = cx + radius * Math.cos(endAngle);
+            const y2 = cy + radius * Math.sin(endAngle);
+
+            const largeArc = angle > Math.PI ? 1 : 0;
+
+            svgContent += `
+                <path d="M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z"
+                      fill="${colors[i]}" stroke="white" stroke-width="2" class="dist-bar">
+                    <title>${cat}: ${count} genes (${((count / total) * 100).toFixed(1)}%)</title>
+                </path>
+            `;
+
+            currentAngle = endAngle;
+        });
+
+        svgContent += '</g>';
+        svg.innerHTML = svgContent;
+    }
+
+    function renderConsistencyDistribution(track, container) {
+        const values = [];
+        const naCount = { count: 0 };
+
+        genes.forEach(g => {
+            const val = g[track.field];
+            if (val < 0) naCount.count++;
+            else values.push(val);
+        });
+
+        renderHistogram(track, values, naCount, container);
+    }
+
+    function renderNumericalDistribution(track, container) {
+        const values = [];
+
+        genes.forEach(g => {
+            let val;
+            if (track.getValue) {
+                val = track.getValue(g);
+            } else {
+                val = g[track.field];
+            }
+            if (val !== undefined && val !== null && !isNaN(val)) {
+                values.push(Number(val));
+            }
+        });
+
+        renderHistogram(track, values, null, container);
+    }
+
+    function renderHistogram(track, values, naCount, container) {
+        const total = genes.length;
+        const nBins = Math.min(20, Math.max(10, Math.ceil(Math.sqrt(values.length))));
+
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const binWidth = (max - min) / nBins;
+
+        const bins = Array(nBins).fill(0);
+        values.forEach(v => {
+            const binIdx = Math.min(Math.floor((v - min) / binWidth), nBins - 1);
+            bins[binIdx]++;
+        });
+
+        const mean = values.reduce((a, b) => a + b, 0) / values.length;
+        const sorted = [...values].sort((a, b) => a - b);
+        const median = sorted[Math.floor(sorted.length / 2)];
+
+        let html = `
+            <div class="dist-chart-container">
+                <div class="dist-chart-title">${track.name} Distribution</div>
+                <div class="dist-stats">
+                    <div class="dist-stat-card">
+                        <div class="dist-stat-label">Total Genes</div>
+                        <div class="dist-stat-value">${values.length.toLocaleString()}</div>
+                    </div>
+                    ${naCount ? `
+                    <div class="dist-stat-card" style="border-left-color: var(--kb-base-light);">
+                        <div class="dist-stat-label">N/A</div>
+                        <div class="dist-stat-value">${naCount.count.toLocaleString()}</div>
+                    </div>
+                    ` : ''}
+                    <div class="dist-stat-card" style="border-left-color: var(--kb-accent);">
+                        <div class="dist-stat-label">Mean</div>
+                        <div class="dist-stat-value">${mean.toFixed(3)}</div>
+                    </div>
+                    <div class="dist-stat-card" style="border-left-color: var(--kb-accent);">
+                        <div class="dist-stat-label">Median</div>
+                        <div class="dist-stat-value">${median.toFixed(3)}</div>
+                    </div>
+                    <div class="dist-stat-card" style="border-left-color: var(--kb-accent);">
+                        <div class="dist-stat-label">Min / Max</div>
+                        <div class="dist-stat-value" style="font-size: 16px;">${min.toFixed(2)} / ${max.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 14px; font-weight: 600; color: var(--kb-base-dark); margin-bottom: 12px;">Histogram</h3>
+                <svg class="dist-chart-svg" id="dist-histogram" style="height: 350px;"></svg>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Render histogram
+        const svg = document.getElementById('dist-histogram');
+        const width = svg.clientWidth || 600;
+        const height = 350;
+        const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+        const chartWidth = width - margin.left - margin.right;
+        const chartHeight = height - margin.top - margin.bottom;
+
+        const maxBinCount = Math.max(...bins);
+        const barWidth = chartWidth / nBins;
+
+        let svgContent = `<svg width="${width}" height="${height}">`;
+
+        // Bars
+        bins.forEach((count, i) => {
+            const barHeight = (count / maxBinCount) * chartHeight;
+            const x = margin.left + i * barWidth;
+            const y = margin.top + chartHeight - barHeight;
+            const binStart = min + i * binWidth;
+            const binEnd = binStart + binWidth;
+
+            svgContent += `
+                <rect x="${x}" y="${y}" width="${barWidth * 0.95}" height="${barHeight}"
+                      fill="var(--kb-primary)" opacity="0.8" class="dist-bar">
+                    <title>${binStart.toFixed(2)} - ${binEnd.toFixed(2)}: ${count} genes</title>
+                </rect>
+            `;
+        });
+
+        // Y-axis
+        svgContent += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + chartHeight}" stroke="var(--kb-base-light)" stroke-width="1"/>`;
+
+        // X-axis
+        svgContent += `<line x1="${margin.left}" y1="${margin.top + chartHeight}" x2="${margin.left + chartWidth}" y2="${margin.top + chartHeight}" stroke="var(--kb-base-light)" stroke-width="1"/>`;
+
+        // Y-axis label
+        svgContent += `<text x="${margin.left - 45}" y="${margin.top + chartHeight / 2}" text-anchor="middle" font-size="12" fill="var(--kb-base)" transform="rotate(-90, ${margin.left - 45}, ${margin.top + chartHeight / 2})">Gene Count</text>`;
+
+        // X-axis label
+        svgContent += `<text x="${margin.left + chartWidth / 2}" y="${height - 10}" text-anchor="middle" font-size="12" fill="var(--kb-base)">${track.name}</text>`;
+
+        // Y-axis ticks
+        for (let i = 0; i <= 5; i++) {
+            const y = margin.top + chartHeight - (i / 5) * chartHeight;
+            const val = Math.round((i / 5) * maxBinCount);
+            svgContent += `
+                <line x1="${margin.left - 5}" y1="${y}" x2="${margin.left}" y2="${y}" stroke="var(--kb-base-light)" stroke-width="1"/>
+                <text x="${margin.left - 10}" y="${y + 4}" text-anchor="end" font-size="10" fill="var(--kb-base)">${val}</text>
+            `;
+        }
+
+        // X-axis ticks
+        for (let i = 0; i <= nBins; i += Math.max(1, Math.floor(nBins / 8))) {
+            const x = margin.left + i * barWidth;
+            const val = min + i * binWidth;
+            svgContent += `
+                <line x1="${x}" y1="${margin.top + chartHeight}" x2="${x}" y2="${margin.top + chartHeight + 5}" stroke="var(--kb-base-light)" stroke-width="1"/>
+                <text x="${x}" y="${margin.top + chartHeight + 18}" text-anchor="middle" font-size="10" fill="var(--kb-base)">${val.toFixed(2)}</text>
+            `;
+        }
+
+        svgContent += '</svg>';
+        svg.innerHTML = svgContent;
     }
 
     // ============================================================
