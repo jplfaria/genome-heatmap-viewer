@@ -63,6 +63,30 @@ EXCLUDES=(
 
     # Notebooks
     "*.ipynb"
+
+    # Playwright test artifacts
+    ".playwright-mcp"
+    "playwright-report"
+    "test-results"
+
+    # Screenshots and test images
+    "*.png"
+
+    # Node/npm
+    "node_modules"
+    "package-lock.json"
+    "package.json"
+
+    # Test files
+    "tests"
+    "playwright.config.js"
+    "*.spec.js"
+
+    # Notebooks directory
+    "notebooks"
+
+    # Old standalone version
+    "heatmap_standalone.html"
 )
 
 # Build rsync exclude arguments
