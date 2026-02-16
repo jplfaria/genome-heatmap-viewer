@@ -555,101 +555,11 @@
     <!-- Tab Bar -->
     <div class="tab-bar">
         <img src="kbase_logo.png" alt="KBase" style="height: 28px; margin-right: 12px; align-self: center;">
-        <button class="tab-btn" data-tab="summary" onclick="switchTab('summary')">Summary</button>
         <button class="tab-btn active" data-tab="tracks" onclick="switchTab('tracks')">Tracks</button>
         <button class="tab-btn" data-tab="tree" onclick="switchTab('tree')">Tree</button>
         <button class="tab-btn" data-tab="cluster" onclick="switchTab('cluster')">Cluster</button>
         <button class="tab-btn" data-tab="metabolic" onclick="switchTab('metabolic')">Metabolic Map</button>
         <button class="tab-btn" data-tab="help" onclick="switchTab('help')" style="margin-left: auto;">Help</button>
-    </div>
-    <!-- Tab: Summary -->
-    <div class="tab-content" id="tab-summary">
-        <div class="summary-container">
-            <div class="summary-grid">
-                <!-- Missing Functions Card -->
-                <div class="summary-card">
-                    <div class="summary-card-title">
-                        <span>Missing Functions</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Core functions absent</span>
-                        <span class="summary-metric-value warning" id="summary-missing-core">-</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Gapfilled reactions</span>
-                        <span class="summary-metric-value" id="summary-gapfilled">-</span>
-                    </div>
-                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--kb-base-lightest);">
-                        <div style="font-size: 11px; font-weight: 600; color: var(--kb-base); margin-bottom: 8px;">Top Missing Reactions</div>
-                        <div class="summary-list" id="summary-missing-list">Loading...</div>
-                    </div>
-                </div>
-
-                <!-- Growth Phenotypes Card -->
-                <div class="summary-card">
-                    <div class="summary-card-title">
-                        <span>Growth Phenotypes</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Total phenotypes tested</span>
-                        <span class="summary-metric-value" id="summary-total-phenotypes">-</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Positive growth</span>
-                        <span class="summary-metric-value good" id="summary-positive-growth">-</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Negative growth</span>
-                        <span class="summary-metric-value" id="summary-negative-growth">-</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Avg gaps (negative)</span>
-                        <span class="summary-metric-value" id="summary-avg-gaps">-</span>
-                    </div>
-                </div>
-
-                <!-- Genome Comparison Card -->
-                <div class="summary-card">
-                    <div class="summary-card-title">
-                        <span>Genome Comparison</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Reference genomes</span>
-                        <span class="summary-metric-value" id="summary-n-refs">-</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Closest ANI</span>
-                        <span class="summary-metric-value good" id="summary-closest-ani">-</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">User genome genes</span>
-                        <span class="summary-metric-value" id="summary-user-genes">-</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-metric-label">Core genes</span>
-                        <span class="summary-metric-value good" id="summary-core-genes">-</span>
-                    </div>
-                </div>
-
-                <!-- Protein Localization Card -->
-                <div class="summary-card">
-                    <div class="summary-card-title">
-                        <span>Protein Localization</span>
-                        <span style="font-size:10px; font-weight:400; color:var(--kb-base);">Cellular compartment distribution</span>
-                    </div>
-                    <div id="localization-chart" style="margin-top:12px;"></div>
-                </div>
-
-                <!-- Growth Phenotypes Detail Card (spans full width) -->
-                <div class="summary-card" style="grid-column: 1 / -1;">
-                    <div class="summary-card-title">
-                        <span>Growth Phenotype Predictions</span>
-                        <span style="font-size:10px; font-weight:400; color:var(--kb-base);">Carbon source utilization from metabolic modeling</span>
-                    </div>
-                    <div id="phenotype-table-container" style="margin-top:12px; max-height:400px; overflow-y:auto;"></div>
-                </div>
-            </div>
-        </div>
     </div>
     <!-- Tab: Tracks -->
     <div class="tab-content active" id="tab-tracks">
@@ -683,6 +593,16 @@
                     <span class="toggle-icon">&#9660;</span>
                 </div>
                 <div class="sort-presets" id="sort-presets"></div>
+            </div>
+            <!-- Protein Distribution -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                    <span>Protein Distribution</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px; font-size: 11px;" id="protein-distribution">
+                    Loading...
+                </div>
             </div>
             <!-- Actions -->
             <div class="sidebar-section">
@@ -747,6 +667,15 @@
                     <span class="toggle-icon">&#9660;</span>
                 </div>
                 <div id="tree-stat-toggles"></div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                    <span>Genome Comparison</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px; font-size: 11px;" id="genome-comparison">
+                    Loading...
+                </div>
             </div>
             <div class="sidebar-section">
                 <div class="sidebar-section-title">
@@ -906,6 +835,15 @@
                     <span class="toggle-icon">&#9660;</span>
                 </div>
                 <div style="padding: 8px 12px; font-size: 11px; color: var(--kb-base); line-height: 1.5;" id="pathway-coverage">
+                    Loading...
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title" onclick="toggleSidebarSection(this)">
+                    <span>Growth Phenotypes</span>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div style="padding: 8px 12px; font-size: 11px;" id="growth-phenotypes">
                     Loading...
                 </div>
             </div>
@@ -1784,11 +1722,21 @@
                 title._collapseWired = true;
             }
         });
-        if (tabId === 'summary' && !summaryLoaded) loadSummaryData();
-        if (tabId === 'tree' && !treeLoaded) loadTreeData();
+        if (tabId === 'tree') {
+            if (!treeLoaded) loadTreeData();
+            if (!summaryLoaded) loadSummaryData();
+        }
         if (tabId === 'cluster' && !clusterLoaded) loadClusterData();
-        if (tabId === 'metabolic' && !metabolicLoaded) loadMetabolicData();
-        if (tabId === 'tracks') { resize(); render(); renderMinimap(); }
+        if (tabId === 'metabolic') {
+            if (!metabolicLoaded) loadMetabolicData();
+            if (!summaryLoaded) loadSummaryData();
+        }
+        if (tabId === 'tracks') {
+            resize();
+            render();
+            renderMinimap();
+            if (!summaryLoaded) loadSummaryData();
+        }
     }
 
     // === CONFIG + DATA LOADING ===
@@ -1857,7 +1805,7 @@
         }
     }
 
-    function init() {
+    async function init() {
         canvas = document.getElementById('heatmap');
         ctx = canvas.getContext('2d');
         renderKPI();
@@ -1870,6 +1818,10 @@
         render();
         renderMinimap();
         document.getElementById('info').textContent = `${genes.length} genes loaded`;
+
+        // Load summary data and render in new locations
+        await loadSummaryData();
+        renderProteinDistribution();
     }
 
     function setupSectionCollapse() {
@@ -4335,63 +4287,22 @@
             const resp = await fetch(summaryFile);
             summaryData = await resp.json();
             summaryLoaded = true;
-            renderSummaryTab();
+            // Render data in the new locations
+            renderProteinDistribution();
+            renderGenomeComparison();
+            renderGrowthPhenotypes();
         } catch (e) {
             console.error('Failed to load summary data:', e);
         }
     }
 
-    function renderSummaryTab() {
-        if (!summaryData || !genes) return;
-
-        // Missing Functions Card
-        document.getElementById('summary-missing-core').textContent = summaryData.missing_functions.pangenome_missing || '0';
-        document.getElementById('summary-gapfilled').textContent = summaryData.missing_functions.gapfilled || '0';
-
-        // Render top missing reactions (first 10)
-        const topMissing = summaryData.missing_functions.top_missing || [];
-        const missingListEl = document.getElementById('summary-missing-list');
-        if (topMissing.length === 0) {
-            missingListEl.innerHTML = '<div style="color:#9D9389; font-size:11px;">No missing reactions data</div>';
-        } else {
-            let html = '';
-            for (const item of topMissing.slice(0, 10)) {
-                html += `<div class="summary-list-item">
-                    <span class="rxn-id">${item.reaction}</span>
-                    <div class="rxn-func">${item.function}</div>
-                </div>`;
-            }
-            if (topMissing.length > 10) {
-                html += `<div style="text-align:center; padding:8px; color:var(--kb-base); font-size:10px;">+ ${topMissing.length - 10} more...</div>`;
-            }
-            missingListEl.innerHTML = html;
+    function renderProteinDistribution() {
+        // Render protein localization chart in Tracks tab sidebar
+        if (!genes || genes.length === 0) {
+            document.getElementById('protein-distribution').innerHTML = '<span style="color:#9D9389;">No data loaded</span>';
+            return;
         }
 
-        // Growth Phenotypes Card
-        const growthData = summaryData.growth_phenotypes || {};
-        document.getElementById('summary-total-phenotypes').textContent = growthData.total_phenotypes || '0';
-        document.getElementById('summary-positive-growth').textContent = growthData.positive_growth || '0';
-        document.getElementById('summary-negative-growth').textContent = growthData.negative_growth || '0';
-        document.getElementById('summary-avg-gaps').textContent = (growthData.avg_negative_gaps || 0).toFixed(2);
-
-        // Genome Comparison Card
-        const compData = summaryData.comparison || {};
-        document.getElementById('summary-n-refs').textContent = compData.n_reference_genomes || '0';
-        document.getElementById('summary-closest-ani').textContent = (compData.closest_ani || 0).toFixed(2) + '%';
-
-        // Add gene counts from loaded data
-        document.getElementById('summary-user-genes').textContent = genes.length.toLocaleString();
-        const coreGenes = genes.filter(g => g[CONFIG.fields.PAN_CAT] === 2).length;
-        document.getElementById('summary-core-genes').textContent = coreGenes.toLocaleString();
-
-        // Protein Localization Chart
-        renderLocalizationChart();
-
-        // Growth Phenotype Table
-        renderPhenotypeTable();
-    }
-
-    function renderLocalizationChart() {
         const locCounts = {};
         LOC_NAMES.forEach(name => locCounts[name] = 0);
 
@@ -4402,8 +4313,7 @@
         });
 
         const total = genes.length;
-        const container = document.getElementById('localization-chart');
-        let html = '';
+        let html = '<div style="color:var(--kb-base); line-height:1.6;">';
 
         // Color scheme for compartments
         const locColors = {
@@ -4423,58 +4333,91 @@
 
             html += `
                 <div style="margin-bottom:8px;">
-                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;">
-                        <span style="color:var(--kb-base); font-weight:500;">${locName}</span>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                        <span style="font-weight:500;">${locName}</span>
                         <span style="color:var(--kb-base-dark); font-weight:600;">${count} (${pct}%)</span>
                     </div>
-                    <div style="background:var(--kb-base-lightest); height:16px; border-radius:3px; overflow:hidden;">
+                    <div style="background:var(--kb-base-lightest); height:12px; border-radius:2px; overflow:hidden;">
                         <div style="background:${color}; height:100%; width:${barWidth}%; opacity:0.8;"></div>
                     </div>
                 </div>
             `;
         });
 
-        container.innerHTML = html;
+        html += '</div>';
+        document.getElementById('protein-distribution').innerHTML = html;
     }
 
-    function renderPhenotypeTable() {
-        // For now, show a message that phenotype details aren't available
-        // In production, this would load from growth_phenotype_summary table
-        const container = document.getElementById('phenotype-table-container');
-
-        if (!summaryData || !summaryData.growth_phenotypes || summaryData.growth_phenotypes.total_phenotypes === 0) {
-            container.innerHTML = `
-                <div style="text-align:center; padding:20px; color:var(--kb-base);">
-                    <p style="margin-bottom:8px; font-weight:600;">No detailed phenotype data available</p>
-                    <p style="font-size:11px;">Growth predictions show ${summaryData?.growth_phenotypes?.positive_growth || 0} positive and ${summaryData?.growth_phenotypes?.negative_growth || 0} negative predictions.</p>
-                </div>
-            `;
+    function renderGenomeComparison() {
+        // Render genome comparison stats in Tree tab sidebar
+        if (!summaryData || !genes) {
+            document.getElementById('genome-comparison').innerHTML = '<span style="color:#9D9389;">Loading...</span>';
             return;
         }
 
-        // If we had detailed data, render table here
-        // For now, just show summary
+        const compData = summaryData.comparison || {};
+        const coreGenes = genes.filter(g => g[CONFIG.fields.PAN_CAT] === 2).length;
+
+        const html = `
+            <div style="color:var(--kb-base); line-height:1.6;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+                    <div style="padding:8px; background:var(--kb-base-lightest); border-radius:4px;">
+                        <div style="font-size:10px; color:var(--kb-base); margin-bottom:4px;">Reference Genomes</div>
+                        <div style="font-size:18px; font-weight:700; color:var(--kb-primary);">${compData.n_reference_genomes || 0}</div>
+                    </div>
+                    <div style="padding:8px; background:var(--kb-base-lightest); border-radius:4px;">
+                        <div style="font-size:10px; color:var(--kb-base); margin-bottom:4px;">Closest ANI</div>
+                        <div style="font-size:18px; font-weight:700; color:#22c55e;">${(compData.closest_ani || 0).toFixed(1)}%</div>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div style="padding:8px; background:var(--kb-base-lightest); border-radius:4px;">
+                        <div style="font-size:10px; color:var(--kb-base); margin-bottom:4px;">Total Genes</div>
+                        <div style="font-size:18px; font-weight:700;">${genes.length.toLocaleString()}</div>
+                    </div>
+                    <div style="padding:8px; background:var(--kb-base-lightest); border-radius:4px;">
+                        <div style="font-size:10px; color:var(--kb-base); margin-bottom:4px;">Core Genes</div>
+                        <div style="font-size:18px; font-weight:700; color:#22c55e;">${coreGenes.toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('genome-comparison').innerHTML = html;
+    }
+
+    function renderGrowthPhenotypes() {
+        // Render growth phenotypes in Metabolic Map tab sidebar
+        if (!summaryData || !summaryData.growth_phenotypes) {
+            document.getElementById('growth-phenotypes').innerHTML = '<span style="color:#9D9389;">No phenotype data available</span>';
+            return;
+        }
+
         const growthData = summaryData.growth_phenotypes;
-        container.innerHTML = `
-            <div style="padding:12px; background:var(--kb-base-lightest); border-radius:4px;">
-                <p style="font-size:12px; margin-bottom:8px;">Growth phenotype predictions are based on metabolic modeling (FBA) testing ${growthData.total_phenotypes} carbon sources.</p>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:12px;">
-                    <div style="padding:8px; background:white; border-radius:4px; border-left:3px solid #22c55e;">
-                        <div style="font-size:11px; color:var(--kb-base); margin-bottom:4px;">Positive Growth</div>
-                        <div style="font-size:20px; font-weight:700; color:#22c55e;">${growthData.positive_growth}</div>
+
+        const html = `
+            <div style="color:var(--kb-base); line-height:1.6;">
+                <p style="margin-bottom:10px; font-size:10px;">Metabolic modeling (FBA) tested ${growthData.total_phenotypes || 0} carbon sources</p>
+                <div style="display:grid; grid-template-columns:1fr; gap:8px;">
+                    <div style="padding:8px; background:var(--kb-base-lightest); border-radius:4px; border-left:3px solid #22c55e;">
+                        <div style="font-size:10px; color:var(--kb-base); margin-bottom:2px;">Positive Growth</div>
+                        <div style="font-size:20px; font-weight:700; color:#22c55e;">${growthData.positive_growth || 0}</div>
                     </div>
-                    <div style="padding:8px; background:white; border-radius:4px; border-left:3px solid #ef4444;">
-                        <div style="font-size:11px; color:var(--kb-base); margin-bottom:4px;">Negative Growth</div>
-                        <div style="font-size:20px; font-weight:700; color:#ef4444;">${growthData.negative_growth}</div>
+                    <div style="padding:8px; background:var(--kb-base-lightest); border-radius:4px; border-left:3px solid #ef4444;">
+                        <div style="font-size:10px; color:var(--kb-base); margin-bottom:2px;">Negative Growth</div>
+                        <div style="font-size:20px; font-weight:700; color:#ef4444;">${growthData.negative_growth || 0}</div>
                     </div>
-                    <div style="padding:8px; background:white; border-radius:4px; border-left:3px solid #3b82f6;">
-                        <div style="font-size:11px; color:var(--kb-base); margin-bottom:4px;">Avg Missing Reactions</div>
+                    <div style="padding:8px; background:var(--kb-base-lightest); border-radius:4px; border-left:3px solid #3b82f6;">
+                        <div style="font-size:10px; color:var(--kb-base); margin-bottom:2px;">Avg Missing Reactions</div>
                         <div style="font-size:20px; font-weight:700; color:#3b82f6;">${(growthData.avg_negative_gaps || 0).toFixed(1)}</div>
                     </div>
                 </div>
             </div>
         `;
+
+        document.getElementById('growth-phenotypes').innerHTML = html;
     }
+
 
     // Start
     loadData();
