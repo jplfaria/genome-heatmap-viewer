@@ -362,10 +362,12 @@
         /* Genome selector */
         .genome-minimap {
             background: var(--kb-white);
-            border-top: 1px solid var(--kb-base-lighter);
+            border-top: 3px solid var(--kb-primary);
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
             position: relative;
             height: 56px;
             user-select: none;
+            margin-top: 4px;
         }
         .genome-minimap canvas {
             display: block;
@@ -377,16 +379,24 @@
             position: absolute;
             top: 0;
             height: 36px;
-            background: rgba(2, 109, 170, 0.15);
-            border: 2px solid rgba(2, 109, 170, 0.6);
-            border-radius: 2px;
+            background: rgba(2, 109, 170, 0.2);
+            border: 3px solid var(--kb-primary);
+            border-radius: 3px;
             cursor: grab;
             min-width: 6px;
             box-sizing: border-box;
-            transition: background 0.1s;
+            transition: all 0.15s;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.15);
         }
-        .minimap-viewport:hover { background: rgba(2, 109, 170, 0.25); }
-        .minimap-viewport.dragging { cursor: grabbing; background: rgba(2, 109, 170, 0.3); }
+        .minimap-viewport:hover {
+            background: rgba(2, 109, 170, 0.3);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.9), 0 3px 6px rgba(0,0,0,0.2);
+        }
+        .minimap-viewport.dragging {
+            cursor: grabbing;
+            background: rgba(2, 109, 170, 0.4);
+            box-shadow: 0 0 0 2px rgba(255,255,255,1), 0 4px 8px rgba(0,0,0,0.25);
+        }
         .minimap-info {
             display: flex;
             justify-content: space-between;
