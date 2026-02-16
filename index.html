@@ -730,7 +730,6 @@
                         <option value="pan_category">Core/Accessory</option>
                         <option value="conservation">Conservation</option>
                         <option value="avg_cons">Avg Consistency</option>
-                        <option value="is_hypo">Hypothetical</option>
                         <option value="localization">Localization</option>
                         <option value="n_ko"># KEGG Terms</option>
                         <option value="n_modules">Module Hits</option>
@@ -1159,14 +1158,14 @@
                     <div class="help-analysis-view">
                         <h4>1. Characterization Targets</h4>
                         <div class="purpose"><strong>Purpose:</strong> Identify conserved genes with unknown function that are priority targets for experimental characterization.</div>
-                        <div class="tracks"><strong>Tracks:</strong> Hypothetical Protein, Core/Accessory, Pangenome Conservation, Avg Consistency</div>
-                        <div class="use-case"><strong>Example:</strong> "Find core genes (>95% conservation) that are annotated as hypothetical with low consistency scores. These are high-value characterization targets because they're essential but poorly understood."</div>
+                        <div class="tracks"><strong>Tracks:</strong> Core/Accessory, Pangenome Conservation, Avg Consistency, Annotation Specificity</div>
+                        <div class="use-case"><strong>Example:</strong> "Find core genes (>95% conservation) with low specificity and consistency scores. These are high-value characterization targets because they're essential but poorly annotated."</div>
                     </div>
 
                     <div class="help-analysis-view">
                         <h4>2. Annotation Quality</h4>
                         <div class="purpose"><strong>Purpose:</strong> Identify annotation conflicts and quality issues across multiple annotation sources.</div>
-                        <div class="tracks"><strong>Tracks:</strong> Avg Consistency, Annotation Specificity, Hypothetical Protein</div>
+                        <div class="tracks"><strong>Tracks:</strong> Avg Consistency, Annotation Specificity</div>
                         <div class="use-case"><strong>Example:</strong> "Genes with low consistency may have unreliable or inconsistent annotations across reference genomes. Prioritize manual curation."</div>
                     </div>
 
@@ -1206,8 +1205,8 @@
                     <h3>Finding Genes for Experimental Validation</h3>
                     <ol>
                         <li>Switch to <strong>Characterization Targets</strong> analysis view</li>
-                        <li>Look for genes with: Core status + Hypothetical protein + High conservation</li>
-                        <li>Click gene to see details and check if it has ANY functional annotations</li>
+                        <li>Look for genes with: Core status + Low specificity + Low consistency</li>
+                        <li>Click gene to see details and check functional annotations quality</li>
                         <li>Export gene list for lab prioritization</li>
                     </ol>
 
@@ -1405,12 +1404,6 @@
             '<span class="tt-label">About PSORTb:</span>PSORTb uses multiple methods (signal peptides, transmembrane helices, motifs) to predict where a protein localizes in a Gram-negative cell. "Unknown" means PSORTb could not confidently predict a location.' +
             '<span class="tt-label">Biological insight:</span>Localization correlates with function: transporters are in membranes, metabolic enzymes in cytoplasm, secreted toxins are extracellular.' },
         // === NEW TRACKS ===
-        { id: 'is_hypo', name: 'Hypothetical Protein', field: F.IS_HYPO, type: 'binary', enabled: false,
-          desc: '<strong>Hypothetical Protein Flag</strong>' +
-            '<span class="tt-label">What it shows:</span>Whether both annotation tools (RAST and Bakta) classify this gene as a hypothetical protein, meaning its function is unknown.' +
-            '<div class="tt-colors"><span class="tt-swatch" style="background:#6366f1"></span> <strong>Has function</strong> = at least one tool assigned a function &nbsp; <span class="tt-swatch" style="background:#f97316"></span> <strong>Hypothetical</strong> = both tools say hypothetical/unknown</div>' +
-            '<span class="tt-label">Why it matters:</span>102 genes in this genome are functionally dark (both RAST and Bakta say hypothetical). When these overlap with core pangenome genes, they represent high-priority characterization targets since they\'re conserved but uncharacterized.' +
-            '<span class="tt-label">Tip:</span>Combine with the Core/Accessory track. Hypothetical + Core = conserved gene with no known function, likely important.' },
         { id: 'has_name', name: 'Has Gene Name', field: F.HAS_NAME, type: 'binary', enabled: false,
           desc: '<strong>Has Official Gene Name</strong>' +
             '<span class="tt-label">What it shows:</span>Whether this gene has an official gene name (e.g., dnaA, tssB, lacZ) as opposed to being identified only by a locus tag.' +
@@ -1917,22 +1910,22 @@
     // === ANALYSIS VIEWS ===
     const ANALYSIS_VIEWS = [
         { id: 'characterization', name: 'Characterization Targets',
-          tracks: ['is_hypo', 'pan_category', 'conservation', 'avg_cons'],
+          tracks: ['pan_category', 'conservation', 'avg_cons', 'specificity'],
           sort: 'pan_status',
           summary: 'Find conserved genes with unknown function',
           desc: '<strong>Characterization Targets</strong>' +
             '<span class="tt-label">Purpose:</span>Identify genes that are conserved across genomes but lack functional annotation. These are high-priority targets for experimental characterization.' +
-            '<span class="tt-label">What to look for:</span>Genes that show orange (hypothetical) in the first track but green (core) in the second. These are conserved in nearly all reference genomes yet both RAST and Bakta fail to assign a function.' +
-            '<span class="tt-label">Tracks shown:</span>Hypothetical Protein + Core/Accessory + Conservation + Avg Consistency' +
-            '<span class="tt-label">Example use case:</span>Find core genes (>95% conservation) annotated as hypothetical with low consistency scores. These are high-value targets because they\'re essential but poorly understood.' },
+            '<span class="tt-label">What to look for:</span>Genes that are core (green) with low specificity (red/orange) and low consistency. These are conserved across genomes but poorly annotated.' +
+            '<span class="tt-label">Tracks shown:</span>Core/Accessory + Conservation + Avg Consistency + Specificity' +
+            '<span class="tt-label">Example use case:</span>Find core genes (>95% conservation) with low specificity and consistency scores. These are high-value targets because they\'re essential but poorly characterized.' },
         { id: 'annotation_quality', name: 'Annotation Quality',
-          tracks: ['avg_cons', 'specificity', 'is_hypo'],
+          tracks: ['avg_cons', 'specificity'],
           sort: 'low_consistency',
           summary: 'Spot annotation conflicts and gaps',
           desc: '<strong>Annotation Quality Assessment</strong>' +
             '<span class="tt-label">Purpose:</span>Evaluate the reliability of functional annotations. Spots genes where consistency is low or specificity is poor.' +
             '<span class="tt-label">What to look for:</span>Genes sorted by lowest consistency first. Blue cells = potential annotation problems. Look for patterns: do certain function types consistently show low consistency?' +
-            '<span class="tt-label">Tracks shown:</span>Avg Consistency + Specificity + Hypothetical Flag' +
+            '<span class="tt-label">Tracks shown:</span>Avg Consistency + Specificity' +
             '<span class="tt-label">Example use case:</span>Genes with low consistency may have unreliable annotations. Prioritize these for manual curation or re-annotation.' },
         { id: 'metabolic', name: 'Metabolic Landscape',
           tracks: ['n_ec', 'n_modules', 'ec_cons', 'ec_map_cons'],
@@ -2265,7 +2258,6 @@
             <div class="detail-section">
                 <div class="detail-section-title">Annotation</div>
                 <div class="detail-row"><span class="detail-label">Gene Name</span><span class="detail-value">${gene[F.HAS_NAME] ? 'Yes' : 'No'}</span></div>
-                <div class="detail-row"><span class="detail-label">Hypothetical</span><span class="detail-value">${gene[F.IS_HYPO] ? 'Yes (both tools)' : 'No'}</span></div>
                 <div class="detail-row"><span class="detail-label">Protein Length</span><span class="detail-value">${gene[F.PROT_LEN]} aa</span></div>
             </div>
             <div class="detail-section">
@@ -2646,7 +2638,7 @@
                     <div class="tt-row"><span class="tt-label">KO / GO / EC</span><span class="tt-val">${fmtCons(gene[F.KO_CONS])} / ${fmtCons(gene[F.GO_CONS])} / ${fmtCons(gene[F.EC_CONS])}</span></div>
                     <div class="tt-row"><span class="tt-label">Terms</span><span class="tt-val">KO:${gene[F.N_KO]} COG:${gene[F.N_COG]} Pfam:${gene[F.N_PFAM]} GO:${gene[F.N_GO]} EC:${gene[F.N_EC]}</span></div>
                     <div class="tt-row"><span class="tt-label">Location</span><span class="tt-val">${LOC_NAMES[gene[F.LOC]] || '?'}</span></div>
-                    <div class="tt-row"><span class="tt-label">Status</span><span class="tt-val">${gene[F.IS_HYPO] ? 'Hypothetical' : (gene[F.HAS_NAME] ? 'Named' : 'Unnamed')} | ${gene[F.PROT_LEN]}aa</span></div>
+                    <div class="tt-row"><span class="tt-label">Status</span><span class="tt-val">${gene[F.HAS_NAME] ? 'Named' : 'Unnamed'} | ${gene[F.PROT_LEN]}aa</span></div>
                 </div>
                 <div class="func">${gene[F.FUNC] || 'No function annotation'}</div>
             `;
@@ -2835,12 +2827,6 @@
                         '<div class="legend-color" style="background: #6366f1;"></div><span>Forward (+)</span>' +
                         '<div class="legend-color" style="background: #f97316;"></div><span>Reverse (-)</span>',
                     tip: 'Purple = gene on forward strand. Orange = gene on reverse strand. Blocks of the same color often indicate operons (co-transcribed gene groups).'
-                },
-                'is_hypo': {
-                    html: '<span class="legend-label">Hypothetical:</span>' +
-                        '<div class="legend-color" style="background: #6366f1;"></div><span>Hypothetical</span>' +
-                        '<div class="legend-color" style="background: #f97316;"></div><span>Has function</span>',
-                    tip: 'Purple = both annotation tools (RAST and Bakta) classify this gene as hypothetical (function unknown). Orange = at least one tool assigned a function.'
                 },
                 'has_name': {
                     html: '<span class="legend-label">Gene Name:</span>' +
@@ -3297,7 +3283,6 @@
             case 'pan_category': return COLORS.categorical(gene[F.PAN_CAT]);
             case 'conservation': return COLORS.sequential(gene[F.CONS_FRAC]);
             case 'avg_cons': return COLORS.consistency(gene[F.AVG_CONS]);
-            case 'is_hypo': return COLORS.binary(gene[F.IS_HYPO] ? 0 : 1);
             case 'localization': return COLORS.categorical(gene[F.LOC]);
             case 'n_ko': return COLORS.sequential(Math.min(gene[F.N_KO] / 4, 1));
             case 'n_modules': return COLORS.sequential(Math.min(gene[F.N_MODULES] / 5, 1));
@@ -3408,9 +3393,6 @@
                 break;
             case 'avg_cons': case 'specificity':
                 html = '<div class="legend-item"><span>0</span><div class="legend-color" style="background: linear-gradient(to right, #ef4444, #fbbf24, #22c55e); width: 50px;"></div><span>1</span><div class="legend-color" style="background: #e5e7eb;"></div>N/A</div>';
-                break;
-            case 'is_hypo':
-                html = '<div class="legend-item"><div class="legend-color" style="background:#6366f1"></div>Has function</div><div class="legend-item"><div class="legend-color" style="background:#f97316"></div>Hypothetical</div>';
                 break;
             case 'localization':
                 html = LOC_NAMES.map((name, i) => `<div class="legend-item"><div class="legend-color" style="background:${COLORS.categorical(i)}"></div>${name}</div>`).join('');

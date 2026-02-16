@@ -46,7 +46,6 @@
     { "id": "n_pfam", "name": "# Pfam Terms", "field": "N_PFAM", "type": "sequential", "enabled": false },
     { "id": "n_go", "name": "# GO Terms", "field": "N_GO", "type": "sequential", "enabled": false },
     { "id": "localization", "name": "Subcellular Localization", "field": "LOC", "type": "categorical", "enabled": false, "categories": "localization" },
-    { "id": "is_hypo", "name": "Hypothetical Protein", "field": "IS_HYPO", "type": "binary", "enabled": false },
     { "id": "has_name", "name": "Has Gene Name", "field": "HAS_NAME", "type": "binary", "enabled": false },
     { "id": "n_ec", "name": "# EC Numbers", "field": "N_EC", "type": "sequential", "enabled": false },
     { "id": "cluster_size", "name": "Cluster Size", "field": "CLUSTER_SIZE", "type": "sequential", "enabled": false },
@@ -74,8 +73,8 @@
     { "id": "strand_blocks", "name": "Strand Blocks", "field": "STRAND", "direction": "desc", "tiebreak": "START" }
   ],
   "analysis_views": [
-    { "id": "characterization", "name": "Characterization Targets", "tracks": ["is_hypo", "pan_category", "conservation", "avg_cons"], "sort": "pan_status", "summary": "Find conserved genes with unknown function" },
-    { "id": "annotation_quality", "name": "Annotation Quality", "tracks": ["avg_cons", "specificity", "is_hypo"], "sort": "low_consistency", "summary": "Spot annotation conflicts and gaps" },
+    { "id": "characterization", "name": "Characterization Targets", "tracks": ["pan_category", "conservation", "avg_cons", "specificity"], "sort": "pan_status", "summary": "Find conserved genes with unknown function" },
+    { "id": "annotation_quality", "name": "Annotation Quality", "tracks": ["avg_cons", "specificity"], "sort": "low_consistency", "summary": "Spot annotation conflicts and gaps" },
     { "id": "metabolic", "name": "Metabolic Landscape", "tracks": ["n_ec", "n_modules", "ec_cons", "ec_map_cons"], "sort": null, "summary": "Map enzymatic and pathway coverage" },
     { "id": "pangenome", "name": "Pangenome Structure", "tracks": ["conservation", "pan_category", "cluster_size", "strand"], "sort": "conservation", "summary": "Explore pangenome architecture and gene families" },
     { "id": "annotation_depth", "name": "Knowledge Coverage", "tracks": ["has_name", "n_ko", "n_go", "n_pfam", "n_ec"], "sort": "annotation_quality", "summary": "How well-characterized is each gene?" },
@@ -86,7 +85,6 @@
     { "value": "pan_category", "label": "Core/Accessory" },
     { "value": "conservation", "label": "Conservation" },
     { "value": "avg_cons", "label": "Avg Consistency" },
-    { "value": "is_hypo", "label": "Hypothetical" },
     { "value": "localization", "label": "Localization" },
     { "value": "n_ko", "label": "# KEGG Terms" },
     { "value": "n_modules", "label": "Module Hits" },
