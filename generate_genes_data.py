@@ -394,31 +394,51 @@ def main():
         # ── Consistency scores (COMPUTE from cluster annotations) ──
 
         if cluster_ids:
-            # Get reference gene annotations for this cluster
-            # For multi-cluster genes, use the first cluster
-            # (or could average across clusters - TBD)
-            cid = cluster_ids[0]
-            ref_genes = cluster_ref_genes.get(cid, [])
+            # For multi-cluster genes, compute consistency for EACH cluster and take MAX
+            # (consistent with conservation computation which also uses MAX)
+            # This ensures 266 multi-cluster genes get the best consistency score
+            all_rast_cons = []
+            all_ko_cons = []
+            all_go_cons = []
+            all_ec_cons = []
+            all_bakta_cons = []
 
-            # RAST consistency
-            ref_rast = [g["rast_function"] for g in ref_genes if g["rast_function"]]
-            rast_cons = compute_consistency(rast_func, ref_rast)
+            for cid in cluster_ids:
+                ref_genes = cluster_ref_genes.get(cid, [])
+                if not ref_genes:
+                    continue
 
-            # KO consistency
-            ref_ko = [g["ko"] for g in ref_genes if g["ko"]]
-            ko_cons = compute_consistency(row["ko"], ref_ko)
+                # RAST consistency for this cluster
+                ref_rast = [g["rast_function"] for g in ref_genes if g["rast_function"]]
+                if ref_rast:
+                    all_rast_cons.append(compute_consistency(rast_func, ref_rast))
 
-            # GO consistency
-            ref_go = [g["go"] for g in ref_genes if g["go"]]
-            go_cons = compute_consistency(row["go"], ref_go)
+                # KO consistency for this cluster
+                ref_ko = [g["ko"] for g in ref_genes if g["ko"]]
+                if ref_ko:
+                    all_ko_cons.append(compute_consistency(row["ko"], ref_ko))
 
-            # EC consistency
-            ref_ec = [g["ec"] for g in ref_genes if g["ec"]]
-            ec_cons = compute_consistency(row["ec"], ref_ec)
+                # GO consistency for this cluster
+                ref_go = [g["go"] for g in ref_genes if g["go"]]
+                if ref_go:
+                    all_go_cons.append(compute_consistency(row["go"], ref_go))
 
-            # Bakta consistency
-            ref_bakta = [g["bakta_function"] for g in ref_genes if g["bakta_function"]]
-            bakta_cons = compute_consistency(bakta_func, ref_bakta)
+                # EC consistency for this cluster
+                ref_ec = [g["ec"] for g in ref_genes if g["ec"]]
+                if ref_ec:
+                    all_ec_cons.append(compute_consistency(row["ec"], ref_ec))
+
+                # Bakta consistency for this cluster
+                ref_bakta = [g["bakta_function"] for g in ref_genes if g["bakta_function"]]
+                if ref_bakta:
+                    all_bakta_cons.append(compute_consistency(bakta_func, ref_bakta))
+
+            # Take MAX consistency across all clusters (or -1 if no valid scores)
+            rast_cons = max(all_rast_cons) if all_rast_cons else -1
+            ko_cons = max(all_ko_cons) if all_ko_cons else -1
+            go_cons = max(all_go_cons) if all_go_cons else -1
+            ec_cons = max(all_ec_cons) if all_ec_cons else -1
+            bakta_cons = max(all_bakta_cons) if all_bakta_cons else -1
 
             # Average consistency (exclude -1 values)
             cons_scores = [s for s in [rast_cons, ko_cons, go_cons, ec_cons, bakta_cons] if s >= 0]

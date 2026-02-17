@@ -59,7 +59,7 @@ def main():
         ("BAKTA_CONS", 1.0),     # Bakta consistency
         ("AVG_CONS", 1.0),       # average consistency
         ("EC_AVG_CONS", 1.0),    # EC average consistency
-        ("EC_MAP_CONS", 1.0),    # EC mapped consistency
+        # EC_MAP_CONS removed - always -1 (deprecated field)
         ("SPECIFICITY", 1.0),    # annotation specificity
         ("N_KO", 1.0),           # # KEGG terms
         ("N_COG", 1.0),          # # COG terms
