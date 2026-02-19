@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Generate ../data/reactions_data.json for the Genome Heatmap Viewer metabolic map tab.
+"""Generate ../data/reactions_data.json for the Datalake Dashboard metabolic map tab.
 
-Supports both old (berdl_tables.db) and new (GenomeDataLakeTables) schemas.
+Usage:
+    python3 generate_reactions_data.py DB_PATH [GENES_DATA_PATH] [OUTPUT_PATH]
 """
 
 import json
@@ -9,53 +10,35 @@ import re
 import sqlite3
 import sys
 
-DB_PATH = "/Users/jplfaria/repos/genome-heatmap-viewer/berdl_tables.db"
-GENES_DATA_PATH = "/Users/jplfaria/repos/genome-heatmap-viewer/../data/genes_data.json"
-OUTPUT_PATH = "/Users/jplfaria/repos/genome-heatmap-viewer/../data/reactions_data.json"
-
-
-def detect_schema(conn):
-    tables = [r[0] for r in conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-    ).fetchall()]
-    return 'new' if 'user_feature' in tables else 'old'
-
 
 def main():
-    db_path = sys.argv[1] if len(sys.argv) > 1 else DB_PATH
-    genes_data_path = sys.argv[2] if len(sys.argv) > 2 else GENES_DATA_PATH
-    output_path = sys.argv[3] if len(sys.argv) > 3 else OUTPUT_PATH
+    if len(sys.argv) < 2:
+        print("Usage: python3 generate_reactions_data.py DB_PATH [GENES_DATA_PATH] [OUTPUT_PATH]")
+        sys.exit(1)
+
+    db_path = sys.argv[1]
+    genes_data_path = sys.argv[2] if len(sys.argv) > 2 else "genes_data.json"
+    output_path = sys.argv[3] if len(sys.argv) > 3 else "reactions_data.json"
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    schema = detect_schema(conn)
-    print(f"Detected schema: {schema}")
-
-    # Identify user genome and reactions table
-    if schema == 'new':
-        user_genome = conn.execute(
-            "SELECT genome FROM genome WHERE kind = 'user' LIMIT 1"
-        ).fetchone()["genome"]
-        rxn_table = "genome_reaction"
-    else:
-        user_genome = conn.execute(
-            "SELECT id FROM genome WHERE id LIKE 'user_%' LIMIT 1"
-        ).fetchone()["id"]
-        rxn_table = "genome_reactions"
-
+    # Identify user genome
+    user_genome = conn.execute(
+        "SELECT genome FROM genome WHERE kind = 'user' LIMIT 1"
+    ).fetchone()["genome"]
     print(f"  User genome: {user_genome}")
 
     # Count total genomes
     n_genomes = conn.execute(
-        f"SELECT COUNT(DISTINCT genome_id) FROM {rxn_table}"
+        "SELECT COUNT(DISTINCT genome_id) FROM genome_reaction"
     ).fetchone()[0]
     print(f"  {n_genomes} genomes in comparison")
 
     # Count genomes per reaction
     print("Counting genomes per reaction...")
     rxn_genomes = {}
-    for row in conn.execute(f"SELECT reaction_id, genome_id FROM {rxn_table}"):
+    for row in conn.execute("SELECT reaction_id, genome_id FROM genome_reaction"):
         rxn_id = row["reaction_id"]
         if rxn_id not in rxn_genomes:
             rxn_genomes[rxn_id] = set()
@@ -64,11 +47,11 @@ def main():
     # Extract user genome reactions
     print(f"Loading reactions for {user_genome}...")
     reactions = {}
-    for row in conn.execute(f"""
+    for row in conn.execute("""
         SELECT reaction_id, genes, equation_names, equation_ids, directionality,
                gapfilling_status, rich_media_flux, rich_media_class,
                minimal_media_flux, minimal_media_class
-        FROM {rxn_table}
+        FROM genome_reaction
         WHERE genome_id = ?
     """, (user_genome,)):
         rxn_id = row["reaction_id"]

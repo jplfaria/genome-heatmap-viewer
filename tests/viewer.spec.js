@@ -26,7 +26,7 @@ test.describe('Tracks Tab - Functionality', () => {
   });
 
   test('page loads with correct title', async ({ page }) => {
-    await expect(page).toHaveTitle('Genome Heatmap Viewer');
+    await expect(page).toHaveTitle('Datalake Dashboard');
   });
 
   test('Tracks tab is active by default', async ({ page }) => {

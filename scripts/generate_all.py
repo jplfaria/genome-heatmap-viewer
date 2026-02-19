@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Unified generator: runs all data generation scripts for a given SQLite database.
+"""Unified generator: runs all data generation scripts for a GenomeDataLakeTables database.
 
 Usage:
     python scripts/generate_all.py --db /path/to/database.db [--output-dir data/]
-
-Supports both old (berdl_tables.db) and new (GenomeDataLakeTables) schemas.
-Auto-detects the schema and runs all generators in order.
 """
 
 import argparse
@@ -13,7 +10,6 @@ import os
 import subprocess
 import sys
 import time
-
 
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -40,11 +36,11 @@ OUTPUT_FILES = {
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate all data files for the Genome Heatmap Viewer"
+        description="Generate all data files for the Datalake Dashboard"
     )
     parser.add_argument(
         "--db", required=True,
-        help="Path to SQLite database (berdl_tables.db or GenomeDataLakeTables .db)"
+        help="Path to GenomeDataLakeTables SQLite database"
     )
     parser.add_argument(
         "--output-dir", default=None,
@@ -77,7 +73,6 @@ def main():
     failed = []
 
     for script_name, arg_types in SCRIPTS:
-        # Check skip
         if any(kw in script_name.lower() for kw in skip_keywords):
             print(f"\nSKIPPING {script_name}")
             continue
@@ -87,7 +82,6 @@ def main():
             print(f"\nWARNING: {script_name} not found, skipping")
             continue
 
-        # Build command args
         cmd_args = [sys.executable, script_path]
         for arg_type in arg_types:
             if arg_type == "db":
@@ -123,8 +117,6 @@ def main():
         sys.exit(1)
     else:
         print("All scripts completed successfully!")
-
-        # Print output file sizes
         print(f"\nOutput files in {output_dir}:")
         for script_name, out_file_name in OUTPUT_FILES.items():
             if out_file_name:
