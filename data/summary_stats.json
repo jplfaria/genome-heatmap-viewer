@@ -154,7 +154,7 @@
     "total_phenotypes": 212
   },
   "comparison": {
-    "n_reference_genomes": 63,
+    "n_reference_genomes": 52,
     "closest_ani": 99.99
   }
 }

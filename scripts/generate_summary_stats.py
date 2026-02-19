@@ -126,7 +126,7 @@ def main():
     # --- Reference genome stats ---
     print("Extracting reference genome comparison...")
     ref_count = conn.execute(
-        "SELECT COUNT(*) FROM genome WHERE kind != 'user'"
+        "SELECT COUNT(DISTINCT genome) FROM pangenome_feature"
     ).fetchone()[0]
 
     closest_ani = None
