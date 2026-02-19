@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate phenotype data for integration into ../data/genes_data.json.
 
-This script extracts phenotype statistics from the gene_phenotypes table
-and adds two new fields to each gene:
+Supports both old (berdl_tables.db) and new (GenomeDataLakeTables) schemas.
+
+This script extracts phenotype statistics and adds two new fields to each gene:
 - N_PHENOTYPES (index 36): Number of distinct phenotypes linked to this gene
 - N_FITNESS (index 37): Number of phenotype associations with fitness data (fitness_match='yes')
 
@@ -18,27 +19,49 @@ DB_PATH = "/Users/jplfaria/repos/genome-heatmap-viewer/berdl_tables.db"
 GENES_DATA_PATH = "/Users/jplfaria/repos/genome-heatmap-viewer/../data/genes_data.json"
 
 
+def detect_schema(conn):
+    tables = [r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    ).fetchall()]
+    return 'new' if 'user_feature' in tables else 'old'
+
+
 def main():
     db_path = sys.argv[1] if len(sys.argv) > 1 else DB_PATH
+    genes_data_path = sys.argv[2] if len(sys.argv) > 2 else GENES_DATA_PATH
+
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
+    schema = detect_schema(conn)
+    print(f"Detected schema: {schema}")
     print("Extracting phenotype statistics from database...")
 
     # --- Step 1: Identify user genome ---
-    user_genome_row = conn.execute(
-        "SELECT id FROM genome WHERE id LIKE 'user_%' LIMIT 1"
-    ).fetchone()
-    if not user_genome_row:
-        print("ERROR: No user genome found")
-        sys.exit(1)
+    if schema == 'new':
+        user_genome_row = conn.execute(
+            "SELECT genome FROM genome WHERE kind = 'user' LIMIT 1"
+        ).fetchone()
+        if not user_genome_row:
+            print("ERROR: No user genome found")
+            sys.exit(1)
+        user_genome_id = user_genome_row["genome"]
+        phenotype_table = "gene_phenotype"
+    else:
+        user_genome_row = conn.execute(
+            "SELECT id FROM genome WHERE id LIKE 'user_%' LIMIT 1"
+        ).fetchone()
+        if not user_genome_row:
+            print("ERROR: No user genome found")
+            sys.exit(1)
+        user_genome_id = user_genome_row["id"]
+        phenotype_table = "gene_phenotypes"
 
-    user_genome_id = user_genome_row["id"]
     print(f"  User genome: {user_genome_id}")
 
     # --- Step 2: Load existing ../data/genes_data.json ---
-    print(f"Loading {GENES_DATA_PATH}...")
-    with open(GENES_DATA_PATH, "r") as f:
+    print(f"Loading {genes_data_path}...")
+    with open(genes_data_path, "r") as f:
         genes_data = json.load(f)
 
     print(f"  Loaded {len(genes_data)} genes with {len(genes_data[0])} fields each")
@@ -55,9 +78,9 @@ def main():
     phenotype_counts = defaultdict(set)  # gene_id -> set of phenotype_ids
     fitness_counts = defaultdict(int)    # gene_id -> count of fitness_match='yes'
 
-    query = """
+    query = f"""
         SELECT gene_id, phenotype_id, fitness_match
-        FROM gene_phenotypes
+        FROM {phenotype_table}
         WHERE genome_id = ?
     """
 
@@ -98,8 +121,8 @@ def main():
     print(f"  {genes_with_fitness} genes have fitness scores")
 
     # --- Step 5: Write updated ../data/genes_data.json ---
-    print(f"\nWriting updated {GENES_DATA_PATH}...")
-    with open(GENES_DATA_PATH, "w") as f:
+    print(f"\nWriting updated {genes_data_path}...")
+    with open(genes_data_path, "w") as f:
         json.dump(genes_data, f, separators=(",", ":"))
 
     size_kb = len(json.dumps(genes_data, separators=(",", ":"))) / 1024

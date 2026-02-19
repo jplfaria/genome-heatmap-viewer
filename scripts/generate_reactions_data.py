@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 """Generate ../data/reactions_data.json for the Genome Heatmap Viewer metabolic map tab.
 
-NEW IN v2.0: Reads from genome_reactions table in BERDL SQLite database instead
-of TSV file. Expands flux classes from 3 to 6 categories.
-
-Produces per-reaction data for the user genome including conservation across
-reference genomes, flux values, and 6-category flux classes.
+Supports both old (berdl_tables.db) and new (GenomeDataLakeTables) schemas.
 """
 
 import json
+import re
 import sqlite3
 import sys
 
@@ -17,57 +14,69 @@ GENES_DATA_PATH = "/Users/jplfaria/repos/genome-heatmap-viewer/../data/genes_dat
 OUTPUT_PATH = "/Users/jplfaria/repos/genome-heatmap-viewer/../data/reactions_data.json"
 
 
+def detect_schema(conn):
+    tables = [r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    ).fetchall()]
+    return 'new' if 'user_feature' in tables else 'old'
+
+
 def main():
     db_path = sys.argv[1] if len(sys.argv) > 1 else DB_PATH
+    genes_data_path = sys.argv[2] if len(sys.argv) > 2 else GENES_DATA_PATH
+    output_path = sys.argv[3] if len(sys.argv) > 3 else OUTPUT_PATH
+
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    # --- Identify user genome ---
-    print("Identifying user genome...")
-    user_genome_row = conn.execute(
-        "SELECT id FROM genome WHERE id LIKE 'user_%' LIMIT 1"
-    ).fetchone()
-    if not user_genome_row:
-        print("ERROR: No user genome found (genome.id LIKE 'user_%')")
-        sys.exit(1)
-    user_genome = user_genome_row["id"]
+    schema = detect_schema(conn)
+    print(f"Detected schema: {schema}")
+
+    # Identify user genome and reactions table
+    if schema == 'new':
+        user_genome = conn.execute(
+            "SELECT genome FROM genome WHERE kind = 'user' LIMIT 1"
+        ).fetchone()["genome"]
+        rxn_table = "genome_reaction"
+    else:
+        user_genome = conn.execute(
+            "SELECT id FROM genome WHERE id LIKE 'user_%' LIMIT 1"
+        ).fetchone()["id"]
+        rxn_table = "genome_reactions"
+
     print(f"  User genome: {user_genome}")
 
-    # --- Count total genomes ---
+    # Count total genomes
     n_genomes = conn.execute(
-        "SELECT COUNT(DISTINCT genome_id) FROM genome_reactions"
+        f"SELECT COUNT(DISTINCT genome_id) FROM {rxn_table}"
     ).fetchone()[0]
     print(f"  {n_genomes} genomes in comparison")
 
-    # --- Build per-reaction data ---
-    # First pass: count genomes per reaction (for conservation)
+    # Count genomes per reaction
     print("Counting genomes per reaction...")
     rxn_genomes = {}
-    for row in conn.execute("SELECT reaction_id, genome_id FROM genome_reactions"):
+    for row in conn.execute(f"SELECT reaction_id, genome_id FROM {rxn_table}"):
         rxn_id = row["reaction_id"]
         if rxn_id not in rxn_genomes:
             rxn_genomes[rxn_id] = set()
         rxn_genomes[rxn_id].add(row["genome_id"])
 
-    # Second pass: extract user genome reaction data
+    # Extract user genome reactions
     print(f"Loading reactions for {user_genome}...")
     reactions = {}
-    for row in conn.execute("""
+    for row in conn.execute(f"""
         SELECT reaction_id, genes, equation_names, equation_ids, directionality,
                gapfilling_status, rich_media_flux, rich_media_class,
                minimal_media_flux, minimal_media_class
-        FROM genome_reactions
+        FROM {rxn_table}
         WHERE genome_id = ?
     """, (user_genome,)):
         rxn_id = row["reaction_id"]
         n_with = len(rxn_genomes.get(rxn_id, set()))
         conservation = round(n_with / n_genomes, 4) if n_genomes > 0 else 0
 
-        # Get flux values
         flux_rich = row["rich_media_flux"] if row["rich_media_flux"] is not None else 0
         flux_min = row["minimal_media_flux"] if row["minimal_media_flux"] is not None else 0
-
-        # Get flux classes (NEW: keep as string, UI will handle 6 categories)
         class_rich = row["rich_media_class"] or "blocked"
         class_min = row["minimal_media_class"] or "blocked"
 
@@ -85,73 +94,45 @@ def main():
         }
 
     print(f"  {len(reactions)} reactions loaded")
-
     conn.close()
 
-    # --- Build gene index from ../data/genes_data.json ---
-    # Map locus tags (from reaction.genes field) to gene indices
+    # Build gene index
     print("Building gene index...")
     gene_index = {}
     try:
-        with open(GENES_DATA_PATH) as f:
+        with open(genes_data_path) as f:
             genes = json.load(f)
 
-        # Build FID lookup: feature_id -> gene index
-        fid_to_idx = {}
-        for i, gene in enumerate(genes):
-            fid = str(gene[1])  # FID is field index 1
-            fid_to_idx[fid] = i
+        fid_to_idx = {str(g[1]): i for i, g in enumerate(genes)}
 
-        # Extract all unique locus tags from reaction gene assignments
-        import re
         all_locus_tags = set()
         for rxn in reactions.values():
             gene_str = rxn["genes"]
             if gene_str:
-                # Extract tokens that look like locus tags (alphanumeric + underscore)
                 tags = re.findall(r"[A-Za-z][A-Za-z0-9_]+", gene_str)
-                # Filter out boolean operators
-                tags = [t for t in tags if t not in ("or", "and", "OR", "AND")]
+                tags = [t for t in tags if t.lower() not in ("or", "and")]
                 all_locus_tags.update(tags)
 
-        # Try to match locus tags to gene FIDs
         matched = 0
         for tag in all_locus_tags:
-            # Try exact match first
             if tag in fid_to_idx:
                 gene_index[tag] = [fid_to_idx[tag]]
                 matched += 1
             else:
-                # Try partial match (locus tag might be part of the FID)
-                matches = [
-                    idx for fid, idx in fid_to_idx.items() if tag in fid
-                ]
+                matches = [idx for fid, idx in fid_to_idx.items() if tag in fid]
                 if matches:
                     gene_index[tag] = matches
                     matched += 1
 
-        print(
-            f"  {matched}/{len(all_locus_tags)} locus tags mapped to gene indices"
-        )
+        print(f"  {matched}/{len(all_locus_tags)} locus tags mapped")
     except Exception as e:
         print(f"  Warning: Could not build gene index: {e}")
 
-    # --- Compute stats ---
-    # Count active/blocked/essential for BOTH rich and minimal media
-    # Active = any flux class except "blocked"
-    # Essential = flux class contains "essential"
-    active_rich = sum(
-        1 for r in reactions.values() if r["class_rich"] != "blocked"
-    )
-    active_min = sum(
-        1 for r in reactions.values() if r["class_min"] != "blocked"
-    )
-    essential_rich = sum(
-        1 for r in reactions.values() if "essential" in r["class_rich"]
-    )
-    essential_min = sum(
-        1 for r in reactions.values() if "essential" in r["class_min"]
-    )
+    # Stats
+    active_rich = sum(1 for r in reactions.values() if r["class_rich"] != "blocked")
+    active_min = sum(1 for r in reactions.values() if r["class_min"] != "blocked")
+    essential_rich = sum(1 for r in reactions.values() if "essential" in r["class_rich"])
+    essential_min = sum(1 for r in reactions.values() if "essential" in r["class_min"])
 
     stats = {
         "total_reactions": len(reactions),
@@ -163,7 +144,6 @@ def main():
         "blocked_min": len(reactions) - active_min,
     }
 
-    # --- Write output ---
     output = {
         "user_genome": user_genome,
         "n_genomes": n_genomes,
@@ -172,11 +152,11 @@ def main():
         "stats": stats,
     }
 
-    with open(OUTPUT_PATH, "w") as f:
+    with open(output_path, "w") as f:
         json.dump(output, f, separators=(",", ":"))
 
     size_kb = len(json.dumps(output, separators=(",", ":"))) / 1024
-    print(f"\nWrote {OUTPUT_PATH} ({size_kb:.0f} KB)")
+    print(f"\nWrote {output_path} ({size_kb:.0f} KB)")
     print(f"  Stats: {stats}")
     print("Done!")
 
