@@ -2,10 +2,12 @@
 """Generate phenotype data for integration into genes_data.json.
 
 Extracts phenotype statistics from the gene_phenotype table and adds
-three new fields to each gene:
-- N_PHENOTYPES (index 36): Number of distinct phenotypes linked to this gene
-- N_FITNESS (index 37): Number of phenotype associations with fitness scores
-- FITNESS_AVG (index 38): Average fitness score across all scored phenotypes (-1 if none)
+five new fields to each gene:
+- N_PHENOTYPES (index 37): Number of distinct phenotypes linked to this gene
+- N_FITNESS (index 38): Number of phenotype associations with fitness scores
+- FITNESS_AVG (index 39): Average fitness score across all scored phenotypes (-1 if none)
+- N_FITNESS_AGREE (index 40): Count of conditions where model and fitness agree
+- FITNESS_AGREE_PCT (index 41): Agreement fraction (0.0-1.0), -1 if no scored conditions
 
 Usage:
     python3 generate_phenotypes_data.py DB_PATH GENES_DATA_PATH
@@ -47,16 +49,18 @@ def main():
 
     print(f"  Loaded {len(genes_data)} genes with {len(genes_data[0])} fields each")
 
-    # Count phenotypes and fitness scores per gene
-    print("Counting phenotypes and fitness scores per gene...")
+    # Count phenotypes, fitness scores, and model-fitness agreement per gene
+    print("Counting phenotypes, fitness scores, and model-fitness agreement per gene...")
 
     phenotype_counts = defaultdict(set)
     fitness_counts = defaultdict(int)
     fitness_avg_sum = defaultdict(float)
     fitness_avg_count = defaultdict(int)
+    fitness_agree = defaultdict(int)      # conditions where model and fitness agree
+    fitness_scored = defaultdict(int)     # total scored conditions
 
     for row in conn.execute("""
-        SELECT gene_id, phenotype_id, fitness_match, fitness_avg
+        SELECT gene_id, phenotype_id, fitness_match, fitness_avg, essentiality_fraction
         FROM gene_phenotype
         WHERE genome_id = ?
     """, (user_genome_id,)):
@@ -67,15 +71,24 @@ def main():
             if row["fitness_avg"] is not None:
                 fitness_avg_sum[gene_id] += row["fitness_avg"]
                 fitness_avg_count[gene_id] += 1
+            # Model-fitness agreement: model says essential if essentiality_fraction > 0
+            # Fitness says harmful if fitness_avg < 0
+            # Agreement: both essential OR both not essential
+            fitness_scored[gene_id] += 1
+            model_essential = (row["essentiality_fraction"] or 0) > 0
+            fitness_harmful = (row["fitness_avg"] or 0) < 0
+            if model_essential == fitness_harmful:
+                fitness_agree[gene_id] += 1
 
     conn.close()
 
     print(f"  Found phenotype data for {len(phenotype_counts)} genes")
     print(f"  Found fitness scores for {len(fitness_counts)} genes")
 
-    # Add three new fields to each gene
+    # Add five new fields to each gene
     genes_with_phenotypes = 0
     genes_with_fitness = 0
+    genes_with_agreement = 0
 
     for gene in genes_data:
         gene_id = gene[1]  # FID
@@ -87,17 +100,27 @@ def main():
         else:
             avg_fitness = -1  # N/A sentinel
 
-        gene.append(n_phenotypes)   # [36] N_PHENOTYPES
-        gene.append(n_fitness)      # [37] N_FITNESS
-        gene.append(avg_fitness)    # [38] FITNESS_AVG
+        # Model-fitness agreement
+        n_agree = fitness_agree.get(gene_id, 0)
+        n_scored = fitness_scored.get(gene_id, 0)
+        agree_pct = round(n_agree / n_scored, 4) if n_scored > 0 else -1
+
+        gene.append(n_phenotypes)   # [37] N_PHENOTYPES
+        gene.append(n_fitness)      # [38] N_FITNESS
+        gene.append(avg_fitness)    # [39] FITNESS_AVG
+        gene.append(n_agree)        # [40] N_FITNESS_AGREE
+        gene.append(agree_pct)      # [41] FITNESS_AGREE_PCT
 
         if n_phenotypes > 0:
             genes_with_phenotypes += 1
         if n_fitness > 0:
             genes_with_fitness += 1
+        if n_scored > 0:
+            genes_with_agreement += 1
 
     print(f"  {genes_with_phenotypes} genes have phenotype data")
     print(f"  {genes_with_fitness} genes have fitness scores")
+    print(f"  {genes_with_agreement} genes have model-fitness agreement data")
 
     # Write updated genes_data.json
     print(f"\nWriting updated {genes_data_path}...")

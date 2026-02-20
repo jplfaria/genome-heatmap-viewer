@@ -197,6 +197,489 @@
       }
     ]
   },
+  "phenotype_landscape": {
+    "genomes": [
+      {
+        "id": "GB_GCA_000208445.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_000208525.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_000208585.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_000398885.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_000407765.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_000459855.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_002110245.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_002965005.1",
+        "positive": 61,
+        "negative": 151,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2877,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_002965435.1",
+        "positive": 60,
+        "negative": 152,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.283,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_002965705.1",
+        "positive": 58,
+        "negative": 154,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2736,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_002965965.1",
+        "positive": 59,
+        "negative": 153,
+        "total": 212,
+        "avg_gaps": 1.38,
+        "no_gap_pct": 0.2783,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_002965985.1",
+        "positive": 58,
+        "negative": 154,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2736,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_002966005.1",
+        "positive": 57,
+        "negative": 155,
+        "total": 212,
+        "avg_gaps": 1.4,
+        "no_gap_pct": 0.2689,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_003027815.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_003046645.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_005280595.1",
+        "positive": 63,
+        "negative": 149,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2972,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_005400045.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_013368855.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_013368915.2",
+        "positive": 63,
+        "negative": 149,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2972,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_013368955.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_013369235.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_013369245.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_013369275.2",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_013425105.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_018366075.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019839365.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019839385.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019839465.1",
+        "positive": 61,
+        "negative": 151,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2877,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019839605.1",
+        "positive": 61,
+        "negative": 151,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2877,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019839665.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019839675.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019839765.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019840085.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019840185.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019840475.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019840505.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019840805.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_019840835.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_020783085.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_021307345.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_021725975.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_902498915.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_903932105.1",
+        "positive": 63,
+        "negative": 149,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2972,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_905199925.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_910579235.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "GB_GCA_916618735.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "RS_GCF_000208465.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.27,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "RS_GCF_000407925.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.26,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "RS_GCF_000601195.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "RS_GCF_002965765.1",
+        "positive": 58,
+        "negative": 154,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2736,
+        "accuracy": null
+      },
+      {
+        "id": "RS_GCF_003145355.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.25,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "RS_GCF_024733345.1",
+        "positive": 62,
+        "negative": 150,
+        "total": 212,
+        "avg_gaps": 1.23,
+        "no_gap_pct": 0.2925,
+        "accuracy": null
+      },
+      {
+        "id": "user_GCF_000005845.2.RAST",
+        "positive": 66,
+        "negative": 146,
+        "total": 212,
+        "avg_gaps": 1.17,
+        "no_gap_pct": 0.3113,
+        "accuracy": null
+      }
+    ],
+    "user_genome_id": "user_GCF_000005845.2.RAST",
+    "has_accuracy": false
+  },
   "comparison": {
     "n_reference_genomes": 52,
     "closest_ani": 99.99

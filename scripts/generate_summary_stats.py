@@ -157,6 +157,43 @@ def main():
         summary["growth_phenotypes"] = None
         print("  genome_phenotype table not found")
 
+    # --- Phenotype Prediction Landscape (per-genome phenotype profiles) ---
+    print("Extracting phenotype prediction landscape...")
+    if has_table(conn, 'genome_phenotype'):
+        phenotype_landscape = {"genomes": [], "user_genome_id": user_genome_id}
+
+        for row in conn.execute("""
+            SELECT genome_id,
+                   COUNT(CASE WHEN class = 'P' THEN 1 END) as positive,
+                   COUNT(CASE WHEN class = 'N' THEN 1 END) as negative,
+                   COUNT(*) as total,
+                   AVG(gap_count) as avg_gaps,
+                   SUM(CASE WHEN gap_count = 0 THEN 1 ELSE 0 END) as no_gap_count,
+                   AVG(CASE WHEN observed_objective > 0 THEN 1.0 ELSE NULL END) as accuracy
+            FROM genome_phenotype
+            GROUP BY genome_id
+            ORDER BY genome_id
+        """):
+            phenotype_landscape["genomes"].append({
+                "id": row["genome_id"],
+                "positive": row["positive"],
+                "negative": row["negative"],
+                "total": row["total"],
+                "avg_gaps": round(row["avg_gaps"], 2) if row["avg_gaps"] else 0,
+                "no_gap_pct": round(row["no_gap_count"] / row["total"], 4) if row["total"] else 0,
+                "accuracy": round(row["accuracy"], 4) if row["accuracy"] else None
+            })
+
+        has_accuracy = any(g["accuracy"] is not None for g in phenotype_landscape["genomes"])
+        phenotype_landscape["has_accuracy"] = has_accuracy
+
+        summary["phenotype_landscape"] = phenotype_landscape
+        print(f"  {len(phenotype_landscape['genomes'])} genomes with phenotype data")
+        print(f"  Accuracy data available: {has_accuracy}")
+    else:
+        summary["phenotype_landscape"] = None
+        print("  genome_phenotype table not found")
+
     # --- Reference genome stats ---
     print("Extracting reference genome comparison...")
     ref_count = conn.execute(
