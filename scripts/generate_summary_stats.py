@@ -11,8 +11,27 @@ Usage:
 """
 
 import json
+import os
 import sqlite3
 import sys
+
+
+def jaccard_similarity(vec_a, vec_b):
+    """Compute Jaccard similarity between two binary vectors."""
+    intersection = sum(1 for a, b in zip(vec_a, vec_b) if a == 1 and b == 1)
+    union = sum(1 for a, b in zip(vec_a, vec_b) if a == 1 or b == 1)
+    return intersection / union if union > 0 else 0.0
+
+
+def build_user_vector(conn, user_genome_id, phenotype_ids):
+    """Build P/N vector for user genome matching reference phenotype order."""
+    pheno_map = {}
+    for row in conn.execute(
+        "SELECT phenotype_id, class FROM genome_phenotype WHERE genome_id = ?",
+        (user_genome_id,)
+    ):
+        pheno_map[row["phenotype_id"]] = 1 if row["class"] == "P" else 0
+    return [pheno_map.get(pid, 0) for pid in phenotype_ids]
 
 
 def has_table(conn, table_name):
@@ -184,12 +203,46 @@ def main():
                 "accuracy": round(row["accuracy"], 4) if row["accuracy"] else None
             })
 
-        has_accuracy = any(g["accuracy"] is not None for g in phenotype_landscape["genomes"])
-        phenotype_landscape["has_accuracy"] = has_accuracy
+        # --- Reference phenotype accuracy (Jaccard matching) ---
+        ref_path = os.path.join(os.path.dirname(output_path), "reference_phenotypes.json")
+        if os.path.exists(ref_path):
+            print("  Loading reference phenotypes for Jaccard matching...")
+            with open(ref_path) as f:
+                ref_data = json.load(f)
+
+            user_vector = build_user_vector(conn, user_genome_id, ref_data["phenotype_ids"])
+
+            best_match = None
+            best_similarity = -1
+            for ref_genome in ref_data["genomes"]:
+                sim = jaccard_similarity(user_vector, ref_genome["vector"])
+                if sim > best_similarity:
+                    best_similarity = sim
+                    best_match = ref_genome
+
+            if best_match:
+                for g in phenotype_landscape["genomes"]:
+                    if g["id"] == user_genome_id:
+                        g["accuracy"] = best_match["accuracy"]
+                        g["closest_experimental"] = best_match["id"]
+                        g["jaccard_similarity"] = round(best_similarity, 4)
+                print(f"  Closest experimental genome: {best_match['id']} "
+                      f"(Jaccard={best_similarity:.4f}, accuracy={best_match['accuracy']})")
+
+            phenotype_landscape["reference_accuracies"] = [
+                {"id": g["id"], "accuracy": g["accuracy"]}
+                for g in ref_data["genomes"]
+                if g["accuracy"] is not None
+            ]
+            phenotype_landscape["has_accuracy"] = True
+            print(f"  {len(phenotype_landscape['reference_accuracies'])} reference genomes with accuracy")
+        else:
+            has_accuracy = any(g["accuracy"] is not None for g in phenotype_landscape["genomes"])
+            phenotype_landscape["has_accuracy"] = has_accuracy
+            print(f"  No reference_phenotypes.json found, using DB accuracy (available: {has_accuracy})")
 
         summary["phenotype_landscape"] = phenotype_landscape
         print(f"  {len(phenotype_landscape['genomes'])} genomes with phenotype data")
-        print(f"  Accuracy data available: {has_accuracy}")
     else:
         summary["phenotype_landscape"] = None
         print("  genome_phenotype table not found")
