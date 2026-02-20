@@ -16,7 +16,7 @@ import sys
 import numpy as np
 import umap
 
-# Field indices from genes_data.json (38 fields per gene array)
+# Field indices from genes_data.json (40 fields per gene array)
 F = {
     "ID": 0, "FID": 1, "LENGTH": 2, "START": 3, "STRAND": 4,
     "CONS_FRAC": 5, "PAN_CAT": 6, "FUNC": 7,

@@ -88,6 +88,47 @@ def is_hypothetical(func):
     return False
 
 
+def extract_gene_name(aliases, fid):
+    """Extract short gene name from aliases string.
+
+    Aliases format: 'alias:GeneID:944742;alias:thrL;alias:b0001;alias:NP_414542.1;...'
+    Returns the best short gene name (e.g., 'thrL'), or empty string.
+    """
+    if not aliases or not str(aliases).strip():
+        return ""
+    candidates = []
+    for part in str(aliases).split(";"):
+        part = part.strip()
+        if part.startswith("alias:"):
+            part = part[6:]  # strip 'alias:' prefix
+        part = part.strip()
+        if not part:
+            continue
+        # Skip identifiers that aren't gene names
+        if part == fid:
+            continue
+        if ":" in part:  # UniProtKB:..., GeneID:..., ASAP:...
+            continue
+        if part.startswith("NP_") or part.startswith("WP_") or part.startswith("YP_"):
+            continue
+        if part.startswith("GI:") or part.startswith("GeneID"):
+            continue
+        if part.startswith("ECK") or part.startswith("JW"):  # E.coli systematic names
+            continue
+        if part.startswith("EcoGene"):
+            continue
+        # Prefer short names (typical gene names are 3-6 chars, e.g. dnaA, recA)
+        candidates.append(part)
+    if not candidates:
+        return ""
+    # Prefer the first candidate with 3+ chars (typical gene names: dnaA, recA, thrB)
+    # Fall back to first candidate if all are short
+    for c in candidates:
+        if len(c) >= 3:
+            return c
+    return candidates[0]
+
+
 def compute_specificity(func, gene_names, ko, ec, cog, pfam, go):
     """Compute annotation specificity (0.0-1.0)."""
     if not func or not func.strip():
@@ -389,6 +430,7 @@ def main():
         bakta_is_hypo = is_hypothetical(bakta_func)
         is_hypo_val = 1 if rast_is_hypo and bakta_is_hypo else 0
         has_name = 1 if aliases and str(aliases).strip() else 0
+        gene_name = extract_gene_name(aliases, fid)
 
         if rast_func and rast_func.strip():
             if rast_is_hypo and bakta_is_hypo:
@@ -433,6 +475,7 @@ def main():
             specificity, is_hypo_val, has_name, n_ec, agreement,
             clust_size, n_modules, ec_map_cons, prot_len,
             reactions, rich_flux, rich_class, min_flux, min_class, psortb_new, essentiality,
+            gene_name,
         ]
         genes.append(gene)
 

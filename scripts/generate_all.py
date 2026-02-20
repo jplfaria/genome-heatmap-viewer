@@ -21,6 +21,7 @@ SCRIPTS = [
     ("generate_phenotypes_data.py", ["db", "genes_data"]),
     ("generate_tree_data.py", ["db", "output"]),
     ("generate_reactions_data.py", ["db", "genes_data", "output"]),
+    ("generate_cluster_data.py", ["db", "genes_data", "output"]),
     ("generate_summary_stats.py", ["db", "output"]),
 ]
 
@@ -30,6 +31,7 @@ OUTPUT_FILES = {
     "generate_phenotypes_data.py": None,  # modifies genes_data.json in place
     "generate_tree_data.py": "tree_data.json",
     "generate_reactions_data.py": "reactions_data.json",
+    "generate_cluster_data.py": "cluster_data.json",
     "generate_summary_stats.py": "summary_stats.json",
 }
 

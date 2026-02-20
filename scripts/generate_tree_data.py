@@ -18,6 +18,27 @@ from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.spatial.distance import pdist
 
 
+def parse_taxonomy(raw_tax):
+    """Parse GTDB/NCBI taxonomy string into structured dict.
+
+    Input:  'd__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;...'
+    Output: {'domain': 'Bacteria', 'phylum': 'Pseudomonadota', ...}
+    """
+    if not raw_tax or raw_tax == "Unknown":
+        return {}
+    ranks = {"d": "domain", "p": "phylum", "c": "class", "o": "order",
+             "f": "family", "g": "genus", "s": "species"}
+    result = {}
+    for part in str(raw_tax).split(";"):
+        part = part.strip()
+        if "__" in part:
+            prefix, value = part.split("__", 1)
+            rank = ranks.get(prefix.strip())
+            if rank and value.strip():
+                result[rank] = value.strip()
+    return result
+
+
 def parse_cluster_ids(raw):
     """Parse cluster IDs, handling format with :size suffix."""
     if not raw or not str(raw).strip():
@@ -124,13 +145,34 @@ def main():
     except sqlite3.OperationalError:
         print("  (ani table not found, ANI values will be unavailable)")
 
+    # Per-genome phenotype data
+    print("Loading phenotype data...")
+    pheno_data = {}
+    try:
+        for row in conn.execute("""
+            SELECT genome_id,
+                   COUNT(CASE WHEN class = 'P' THEN 1 END) as positive,
+                   COUNT(CASE WHEN class = 'N' THEN 1 END) as negative,
+                   COUNT(*) as total
+            FROM genome_phenotype GROUP BY genome_id
+        """):
+            pheno_data[row["genome_id"]] = {
+                "positive_growth": row["positive"],
+                "negative_growth": row["negative"],
+                "total": row["total"],
+            }
+        print(f"  Phenotype data for {len(pheno_data)} genomes")
+    except sqlite3.OperationalError:
+        print("  (genome_phenotype table not found, skipping)")
+
     metadata = {}
     for gid in genome_ids:
         gdata = genome_table.get(gid, {})
+        raw_tax = gdata.get("gtdb_taxonomy") or gdata.get("ncbi_taxonomy") or "Unknown"
         meta = {
-            "taxonomy": gdata.get("gtdb_taxonomy") or gdata.get("ncbi_taxonomy") or "Unknown",
+            "taxonomy": raw_tax,
+            "tax": parse_taxonomy(raw_tax),
             "n_features": gdata.get("size", 0),
-            "n_contigs": gdata.get("n_contigs", 0),
             "ani_to_user": ani_data.get(gid) if gid != user_genome_id else 1.0,
         }
         if "kind" in gdata:
@@ -139,7 +181,19 @@ def main():
             meta["checkm_completeness"] = round(gdata["checkm_completeness"], 2)
         if "checkm_contamination" in gdata and gdata["checkm_contamination"] is not None:
             meta["checkm_contamination"] = round(gdata["checkm_contamination"], 2)
+        if gid in pheno_data:
+            meta["phenotype"] = pheno_data[gid]
         metadata[gid] = meta
+
+    # Identify all core clusters (for missing_core computation)
+    all_core_clusters = set()
+    for row in conn.execute("SELECT DISTINCT cluster FROM pangenome_feature WHERE is_core = 1"):
+        all_core_clusters.add(row["cluster"])
+    # Also check user_feature
+    for row in conn.execute("SELECT pangenome_cluster FROM user_feature WHERE pangenome_is_core = 1"):
+        for cid in parse_cluster_ids(row["pangenome_cluster"]):
+            all_core_clusters.add(cid)
+    n_total_core = len(all_core_clusters)
 
     # Per-genome stats
     print("Computing per-genome stats...")
@@ -147,28 +201,44 @@ def main():
     for gid in genome_ids:
         clusters = all_clusters_by_genome[gid]
         if gid == user_genome_id:
-            n_genes = conn.execute(
-                "SELECT COUNT(*) FROM user_feature WHERE genome = ? AND type = 'gene'",
-                (gid,)
-            ).fetchone()[0]
-            core_count = conn.execute(
-                "SELECT COUNT(*) FROM user_feature WHERE genome = ? AND pangenome_is_core = 1",
-                (gid,)
-            ).fetchone()[0]
+            row = conn.execute("""
+                SELECT
+                    COUNT(*) as n_genes,
+                    COUNT(CASE WHEN pangenome_is_core = 1 THEN 1 END) as core_count,
+                    COUNT(DISTINCT CASE WHEN contig IS NOT NULL AND contig <> '' THEN contig END) as n_contigs,
+                    COUNT(CASE WHEN ontology_KEGG IS NOT NULL AND ontology_KEGG <> '' THEN 1 END) as has_kegg,
+                    COUNT(CASE WHEN ontology_EC IS NOT NULL AND ontology_EC <> '' THEN 1 END) as has_ec
+                FROM user_feature WHERE genome = ? AND type = 'gene'
+            """, (gid,)).fetchone()
         else:
-            n_genes = conn.execute(
-                "SELECT COUNT(*) FROM pangenome_feature WHERE genome = ?",
-                (gid,)
-            ).fetchone()[0]
-            core_count = conn.execute(
-                "SELECT COUNT(*) FROM pangenome_feature WHERE genome = ? AND is_core = 1",
-                (gid,)
-            ).fetchone()[0]
+            row = conn.execute("""
+                SELECT
+                    COUNT(*) as n_genes,
+                    COUNT(CASE WHEN is_core = 1 THEN 1 END) as core_count,
+                    COUNT(DISTINCT CASE WHEN contig IS NOT NULL AND contig <> '' THEN contig END) as n_contigs,
+                    COUNT(CASE WHEN ontology_KEGG IS NOT NULL AND ontology_KEGG <> '' THEN 1 END) as has_kegg,
+                    COUNT(CASE WHEN ontology_EC IS NOT NULL AND ontology_EC <> '' THEN 1 END) as has_ec
+                FROM pangenome_feature WHERE genome = ?
+            """, (gid,)).fetchone()
+
+        n_genes = row["n_genes"]
+        core_count = row["core_count"]
+        n_contigs = row["n_contigs"]
+        has_kegg = row["has_kegg"]
+        has_ec = row["has_ec"]
+
+        # Missing core: core clusters not present in this genome
+        genome_core = clusters & all_core_clusters
+        missing_core = n_total_core - len(genome_core)
 
         genome_stats[gid] = {
             "n_genes": n_genes,
             "n_clusters": len(clusters),
             "core_pct": round(core_count / n_genes, 4) if n_genes > 0 else 0,
+            "n_contigs": n_contigs,
+            "missing_core": missing_core,
+            "ko_pct": round(has_kegg / n_genes, 4) if n_genes > 0 else 0,
+            "metabolic_genes": has_ec,
         }
 
     conn.close()
